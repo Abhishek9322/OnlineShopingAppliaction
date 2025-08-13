@@ -1,0 +1,112 @@
+﻿@model IEnumerable<OnlineShopingAppliaction.Models.Product>
+@{
+    ViewData["Title"] = "Products";
+    var selectedCategory = ViewBag.SelectedCategory as int?;
+    var categories = ViewBag.Categories as List<OnlineShopingAppliaction.Models.Category>;
+}
+
+<div class="container mt-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
+        <h2 class="fw-bold text-dark mb-3">🛍 Browse Products</h2>
+
+        <!-- Modern Dropdown Filter -->
+        <form method="get" asp-action="Index" class="mb-3 mb-md-0">
+            <div class="custom-select-wrapper shadow-sm">
+                <select name="categoryId" class="form-select border-0 fw-semibold" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in categories)
+                    {
+                        if (selectedCategory == cat.Id)
+                        {
+                            <option value="@cat.Id" selected="selected">@cat.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@cat.Id">@cat.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- Product Cards Grid -->
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+        @foreach (var product in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow border-0 rounded-4 overflow-hidden product-card">
+                    <img src="@product.ImagePath" class="card-img-top" alt="@product.Name" style="height:220px; object-fit:cover;" />
+                    <div class="card-body d-flex flex-column p-3">
+                        <h5 class="card-title fw-bold text-truncate">@product.Name</h5>
+                        <p class="text-muted mb-1 small">@product.Category?.Name</p>
+                        <p class="fw-bold text-dark mb-2">₹@product.Price</p>
+
+                        @if (product.Discount > 0)
+                        {
+                            <span class="badge bg-success mb-2">Save @product.Discount%</span>
+                        }
+
+                        <div class="mt-auto">
+                            <a asp-action="Details" asp-route-id="@product.Id" class="btn btn-outline-primary btn-sm w-100 mb-2">View Details</a>
+                            <a href="/Cart/AddToCart?productId=@product.Id" class="btn btn-success btn-sm w-100 mb-2">Add to Cart 🛒</a>
+
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <div class="d-flex gap-2">
+                                    <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-warning btn-sm flex-fill">Edit</a>
+                                    <a asp-action="Delete" asp-route-id="@product.Id" class="btn btn-danger btn-sm flex-fill" onclick="return confirm('Delete this product?')">Delete</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    /* Modern Dropdown */
+    .custom-select-wrapper {
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+        transition: all 0.2s ease-in-out;
+    }
+
+        .custom-select-wrapper:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+    .form-select {
+        padding: 0.6rem 1rem;
+        font-size: 0.95rem;
+        background-color: #f8f9fa;
+    }
+
+        .form-select:focus {
+            box-shadow: none;
+            border-color: #0d6efd;
+            background-color: #fff;
+        }
+
+    /* Product Card */
+    .product-card {
+        transition: all 0.25s ease-in-out;
+    }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+    .card-title {
+        font-size: 1rem;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+    }
+</style>

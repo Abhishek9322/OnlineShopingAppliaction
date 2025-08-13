@@ -1,0 +1,60 @@
+﻿@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="card shadow-lg border-0 p-4" style="width: 400px;">
+        <h3 class="text-center text-dark mb-3">🔐 User Login</h3>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger text-center">@ViewBag.Error</div>
+        }
+
+        <form asp-action="Login" method="post" class="needs-validation" novalidate>
+            <!-- Username -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Username</label>
+                <input name="username" class="form-control" placeholder="Enter username"
+                       pattern="^(?=.*[A-Za-z])[A-Za-z0-9]{3,20}$"
+                       title="Username must contain at least one letter and be 3-20 characters long (letters and numbers allowed)."
+                       required />
+                <div class="invalid-feedback">Enter a valid username (letters & numbers only, at least one letter).</div>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Password</label>
+                <input name="password" class="form-control" placeholder="Enter password" type="password"
+                       minlength="6" maxlength="20" required />
+                <div class="invalid-feedback">Password must be between 6 and 20 characters.</div>
+            </div>
+
+            <!-- Login Button -->
+            <button type="submit" class="btn w-100" style="background-color: #9AA6B2; color: #000; border: none;">
+                Login
+            </button>
+
+            <p class="text-center mt-3">Don't have an account? <a href="/Account/Register">Register here</a></p>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Bootstrap Client-Side Validation
+        (() => {
+            'use strict';
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
+}

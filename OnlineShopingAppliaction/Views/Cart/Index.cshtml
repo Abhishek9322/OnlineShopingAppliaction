@@ -1,0 +1,96 @@
+﻿@model IEnumerable<OnlineShopingAppliaction.Models.CartItem>
+
+@{
+    ViewData["Title"] = "Cart";
+}
+
+<div class="container mt-4">
+    <h2 class="fw-bold mb-4">🛒 1/1 ITEMS SELECTED</h2>
+
+   
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning">Your cart is empty.</div>
+    }
+    else
+    {
+        <div class="row">
+            <!-- Left Section: Cart Items -->
+            <div class="col-md-8">
+                <div class="alert alert-success fw-semibold">
+                    🎉 You have got a discount on your items!
+                </div>
+
+                @foreach (var item in Model)
+                {
+                    <div class="card mb-3 shadow-sm border-0">
+                        <div class="row g-0">
+                            <div class="col-md-3">
+                                <img src="@item.Product.ImagePath" class="img-fluid rounded-start" style="height: 180px; object-fit: cover;" alt="@item.Product.Name">
+                            </div>
+                            <div class="col-md-9">
+                                <div class="card-body">
+                                    <h5 class="card-title fw-bold">@item.Product.Name</h5>
+
+                                    <p class="card-text mb-1">
+                                        <a asp-controller="Cart" asp-action="DecreaseQuantity" asp-route-id="@item.Id"
+                                           class="badge bg-white text-white text-decoration-none me-1">➖</a>
+
+                                        <span class="badge bg-light text-dark">@item.Quantity</span>
+
+                                        <a asp-controller="Cart" asp-action="IncreaseQuantity" asp-route-id="@item.Id"
+                                           class="badge bg-white text-white text-decoration-none ms-1">➕</a>
+                                    </p>
+
+                                    <p class="card-text text-muted mb-1">
+                                        Price: ₹@item.Product.Price <del class="text-danger"></del>   @*<!--₹@(item.Product.Price * 2)-->*@ 
+                                    </p>
+                                    <p class="card-text text-success mb-1">Discount: -₹@(ViewData[$"Discount_{item.Id}"] ?? 0)</p>
+                                    <p class="fw-bold text-dark mb-2">Final: ₹@(ViewData[$"Final_{item.Id}"] ?? (item.Product.Price * item.Quantity))</p>
+
+                                    <a href="/Cart/RemoveFromCart/@item.Id" class="btn btn-outline-danger btn-sm">❌ Remove</a>
+                                    <a href="/Product/Index" class="btn btn-outline-primary">← Back to Shopping</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Right Section: Price Summary -->
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm border-0">
+                    <h5 class="fw-bold mb-3">PRICE DETAILS</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Total MRP</span>
+                        <span>₹@ViewBag.Total</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Discount on MRP</span>
+                        <span class="text-success">- ₹@ViewBag.Discount</span>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-2 fw-bold">
+                        <span>Total Amount</span>
+                        <span>₹@ViewBag.FinalTotal</span>
+                    </div>
+                    <a href="/Order/PlaceOrder" class="btn btn-dark w-100 mt-3">PLACE ORDER</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .card-title {
+        font-size: 1.1rem;
+    }
+
+    .card-text {
+        font-size: 0.95rem;
+    }
+
+    .btn-sm {
+        font-size: 0.85rem;
+    }
+</style>

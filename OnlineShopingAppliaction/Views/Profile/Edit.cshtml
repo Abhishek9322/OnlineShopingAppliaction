@@ -1,0 +1,61 @@
+﻿@model OnlineShopingAppliaction.Models.ProfileUpdateViewModel
+@{
+    ViewData["Title"] = "Update Profile";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-dark text-white text-center">
+                    <h4>Update Profile</h4>
+                </div>
+                <div class="card-body p-4">
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success text-center">@TempData["Success"]</div>
+                    }
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+                    }
+
+                    <form asp-action="Edit" method="post" asp-antiforgery="true">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="form-group mb-3">
+                            <label class="fw-bold">Username</label>
+                            <input asp-for="UserName" class="form-control" required />
+                            <span asp-validation-for="UserName" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="fw-bold">Email</label>
+                            <input asp-for="Email" class="form-control" type="email" required />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="fw-bold">New Password (Optional)</label>
+                            <input asp-for="NewPassword" class="form-control" type="password" />
+                        </div>
+                        <div class="form-group text-center">
+                            <button type="submit" class="btn btn-primary btn-sm w-100 mb-2">Save Changes</button>
+                            <a asp-controller="Home" asp-action="Index" class="btn btn-secondary btn-sm w-100">⬅ Back to Home</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        setTimeout(() => document.querySelector(".alert-success")?.remove(), 3000);
+    </script>
+}

@@ -1,0 +1,138 @@
+﻿@model IEnumerable<OnlineShopingAppliaction.Models.Category>
+@{
+    ViewData["Title"] = "Home";
+}
+
+<!-- Banner Carousel -->
+<div id="homeCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+    <div class="carousel-inner">
+        <div class="carousel-item active">
+            <img src="/images/front-view-cyber-monday-shopping-cart-with-bags-copy-space.jpg" class="d-block w-100 banner-img">
+        </div>
+        <div class="carousel-item">
+            <img src="/images/E-commerce-company1.jpg" class="d-block w-100 banner-img">
+        </div>
+        <div class="carousel-item">
+            <img src="/images/ei2.jpg" class="d-block w-100 banner-img">
+        </div>
+    </div>
+</div>
+
+<!-- Categories -->
+<div class="container">
+    @foreach (var category in Model)
+    {
+        <h3 class="mb-4 fw-bold text-dark border-bottom pb-2">@category.Name</h3>
+
+        <!-- First 3 products -->
+        <div class="row g-4">
+            @foreach (var p in category.Products.Take(3))
+            {
+                <div class="col-lg-4 col-md-6 col-sm-6">
+                    <div class="card product-card h-100">
+                        <a href="/Product/Details/@p.Id">
+                            <img src="@p.ImagePath" alt="@p.Name" class="product-img" />
+                        </a>
+                        <div class="card-body text-center p-3">
+                            <h6 class="card-title mb-1">@p.Name</h6>
+                            <p class="product-price mb-2">₹@p.Price</p>
+                            <a href="/Cart/AddToCart?productId=@p.Id" class="btn btn-sm btn-success w-100">
+                                Add To Cart
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Carousel for remaining -->
+        @if (category.Products.Count > 3)
+        {
+            var remainingProducts = category.Products.Skip(3).ToList();
+            int chunkSize = 3;
+            int totalChunks = (int)Math.Ceiling((double)remainingProducts.Count / chunkSize);
+
+            <div id="carousel-@category.Name.Replace(" ", "")" class="carousel slide mt-4" data-bs-ride="carousel" data-bs-interval="3000">
+                <div class="carousel-inner">
+
+                    @for (int i = 0; i < totalChunks; i++)
+                    {
+                        var chunk = remainingProducts.Skip(i * chunkSize).Take(chunkSize).ToList();
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <div class="row justify-content-center g-4">
+                                @foreach (var p in chunk)
+                                {
+                                    <div class="col-lg-4 col-md-6 col-sm-6">
+                                        <div class="card product-card h-100">
+                                            <a href="/Product/Details/@p.Id">
+                                                <img src="@p.ImagePath" alt="@p.Name" class="product-img" />
+                                            </a>
+                                            <div class="card-body text-center p-3">
+                                                <h6 class="card-title mb-1">@p.Name</h6>
+                                                <p class="product-price mb-2">₹@p.Price</p>
+                                                <a href="/Cart/AddToCart?productId=@p.Id" class="btn btn-sm btn-success w-100">
+                                                    Add To Cart
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Carousel Controls -->
+                <button class="carousel-control-prev" type="button" data-bs-target="#carousel-@category.Name.Replace(" ", "")" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carousel-@category.Name.Replace(" ", "")" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+        }
+    }
+</div>
+
+<!-- Styles -->
+<style>
+    .banner-img {
+        height: 400px;
+        object-fit: cover;
+    }
+
+    .product-img {
+        width: 100%;
+        height: 200px;
+        object-fit: contain; /* Show full image without cropping */
+        background-color: #f9f9f9;
+        padding: 10px;
+        border-radius: 8px 8px 0 0;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .product-img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+    .product-card {
+        border-radius: 10px;
+        background: #fff;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+    .product-price {
+        font-size: 1rem;
+        color: #28a745;
+        font-weight: 600;
+    }
+</style>

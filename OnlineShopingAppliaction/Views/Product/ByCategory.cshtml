@@ -1,0 +1,26 @@
+﻿@* @model IEnumerable<OnlineShopingAppliaction.Models.Product> *@
+@* @{ *@
+@*     ViewData["Title"] = ViewBag.CategoryName + " Products"; *@
+@* } *@
+
+@* <h2 class="text-center text-primary mb-4">🛍️ @ViewBag.CategoryName Products</h2> *@
+
+@* <div class="row text-center"> *@
+@*     @foreach (var p in Model) *@
+@*     { *@
+@*         <div class="col-md-4 mb-4"> *@
+@*             <div class="card shadow-lg border-0"> *@
+@*                 <a href="/Product/Details/@p.Id"> *@
+@*                     <img src="@p.ImagePath" class="card-img-top" style="height:250px; object-fit:cover;"> *@
+@*                 </a> *@
+@*                 <div class="card-body"> *@
+@*                     <h5 class="card-title">@p.Name</h5> *@
+@*                     <p class="card-text text-muted">@p.Price Rs.</p> *@
+@*                     <a href="/Cart/AddToCart?productId=@p.Id" class="btn btn-success">Add to Cart 🛒</a> *@
+@*                 </div> *@
+@*             </div> *@
+@*         </div> *@
+@*     } *@
+@* </div> *@
+
+@* <a href="/Product/Index" class="btn btn-secondary mt-3">⬅ Back to Categories</a> *@

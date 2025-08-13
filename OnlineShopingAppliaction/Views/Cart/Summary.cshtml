@@ -1,0 +1,9 @@
+﻿@model IEnumerable<OnlineShopingAppliaction.Models.CartItem>
+<h2>Purchase Summary</h2>
+<ul class="list-group">
+    @foreach (var c in Model)
+    {
+        <li class="list-group-item">@c.Quantity x @c.Product.Name - @(c.Product.Price * c.Quantity)</li>
+    }
+</ul>
+<a class="btn btn-primary mt-3" href="/Product">Continue Shopping</a>

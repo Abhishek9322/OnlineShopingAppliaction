@@ -1,0 +1,39 @@
+﻿@model IEnumerable<OnlineShopingAppliaction.Models.Category>
+@{
+    ViewData["Title"] = "Manage Categories";
+}
+
+<div class="container mt-4">
+    <h2 class="fw-bold text-dark">Category Management</h2>
+
+    <!-- Updated Add New Category button color -->
+    <a class="btn mb-3"
+       asp-action="Create"
+       style="background-color: #D9EAFD; color: #000; border: none;">
+        ➕ Add New Category
+    </a>
+
+    <table class="table table-bordered table-striped shadow">
+        <!-- Updated table header color -->
+        <thead style="background-color: #9AA6B2; color: #fff;">
+            <tr>
+                <th>ID</th>
+                <th>Category Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cat in Model)
+            {
+                <tr>
+                    <td>@cat.Id</td>
+                    <td>@cat.Name</td>
+                    <td>
+                        <a class="btn btn-primary btn-sm" asp-action="Edit" asp-route-id="@cat.Id">✏</a>
+                        <a class="btn btn-danger btn-sm" asp-action="Delete" asp-route-id="@cat.Id" onclick="return confirm('Are you sure to delete this category?')">🗑 </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

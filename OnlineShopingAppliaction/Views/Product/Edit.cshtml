@@ -1,0 +1,58 @@
+﻿@model OnlineShopingAppliaction.Models.Product
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+<div class="container mt-4">
+    <h2 class="fw-bold mb-3 text-secondary">Edit Product</h2>
+
+    <form asp-action="Edit" enctype="multipart/form-data" method="post" class="card p-4 shadow-lg border-0">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="mb-3">
+            <label class="form-label">Name</label>
+            <input asp-for="Name" class="form-control form-control-sm" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control form-control-sm"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Price</label>
+            <input asp-for="Price" class="form-control form-control-sm" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Discount (%)</label>
+            <input asp-for="Discount" class="form-control form-control-sm" />
+        </div>
+
+        <!-- Category -->
+        <div class="mb-3">
+            <label class="form-label">Category</label>
+            <select asp-for="CategoryId" class="form-control form-control-sm" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
+                <option value="">-- Select Category --</option>
+            </select>
+            <span asp-validation-for="CategoryId" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Change Image (Optional)</label>
+            <input type="file" name="ImageFile" class="form-control form-control-sm" />
+            @if (!string.IsNullOrEmpty(Model.ImagePath))
+            {
+                <img src="@Model.ImagePath" class="mt-2 rounded" width="150" />
+            }
+        </div>
+
+        <!-- Small Buttons -->
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-warning btn-sm px-3">Update</button>
+            <a href="/Product/Index" class="btn btn-secondary btn-sm px-3">Back</a>
+        </div>
+    </form>
+
+    @Html.ValidationSummary(true, "", new { @class = "text-danger mt-2" })
+</div>
