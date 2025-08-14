@@ -7,7 +7,7 @@
 
 <div class="container mt-4">
     <div class="d-flex align-items-center justify-content-between flex-wrap mb-4">
-        <h2 class="fw-bold text-dark mb-3">🛍 Browse Products</h2>
+        <h2 class="fw-bold text-dark mb-3">Products Category</h2>
 
         <!-- Modern Dropdown Filter -->
         <form method="get" asp-action="Index" class="mb-3 mb-md-0">
@@ -36,7 +36,7 @@
         {
             <div class="col">
                 <div class="card h-100 shadow border-0 rounded-4 overflow-hidden product-card">
-                    <img src="@product.ImagePath" class="card-img-top" alt="@product.Name" style="height:220px; object-fit:cover;" />
+                    <img src="@product.ImagePath" class="card-img-top bg-light p-2" alt="@product.Name" style="height:220px; object-fit:contain; width:100%;" />
                     <div class="card-body d-flex flex-column p-3">
                         <h5 class="card-title fw-bold text-truncate">@product.Name</h5>
                         <p class="text-muted mb-1 small">@product.Category?.Name</p>
@@ -108,5 +108,13 @@
 
     .badge {
         font-size: 0.75rem;
+    }
+
+    .card-img-top {
+        height: 220px;
+        width: 100%;
+        object-fit: contain;
+        background-color: #fff; /* So empty space looks clean */
+        padding: 5px; /* Small padding so image doesn't touch card edges */
     }
 </style>

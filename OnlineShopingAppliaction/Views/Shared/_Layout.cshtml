@@ -119,6 +119,16 @@
                     text-decoration: underline;
                 }
 
+
+        .footer-link {
+            color: #fff;
+            text-decoration: none;
+        }
+
+            .footer-link:hover {
+                text-decoration: underline;
+            }
+
         #searchFormContainer input.form-control {
             border: 2px solid #D9EAFD;
         }
@@ -132,6 +142,15 @@
 
             #searchFormContainer button.btn-search:hover {
                 background-color: #bcd3f6;
+            }
+
+        .footer-link {
+            color: inherit;
+            text-decoration: none;
+        }
+
+            .footer-link:hover {
+                text-decoration: underline;
             }
     </style>
 </head>
@@ -229,45 +248,64 @@
     <main class="container mt-4">
         @RenderBody()
     </main>
+    <br />
 
-    <footer>
-        <div class="container">
-            <div class="container">
-                <div class="row">
+    <footer style="background-color: #BCCCDC; padding-top: 2rem; padding-bottom: 1rem; color: #fff;">
+        <div class="container text-center">
+            <div class="row justify-content-center">
 
-                    <!-- Company Info -->
-                    <div class="col-lg-4 col-md-6 mb-4">
-                        <h5 class="mb-3">🛒 OnlineShopping</h5>
-                        <p>
-                            Your one-stop shop for fashion, electronics, and home essentials.
-                            Best prices, fast delivery, and quality products.
-                        </p>
-                    </div>
-
-                    <!-- Quick Links -->
-                    <div class="col-lg-2 col-md-6 mb-4">
-                        <h6 class="mb-3">Quick Links</h6>
-                        <ul class="list-unstyled">
-                            <li><a href="/" class="footer-link">Home</a></li>
-                            <li><a href="/Product" class="footer-link">Products</a></li>
-                            <li><a href="/Cart" class="footer-link">Cart</a></li>
-                          
-                        </ul>
-                    </div>
-
-                 
-
-                 
-
+                <!-- Company Info -->
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <h5 class="fw-bold mb-3">🛒 OnlineShopping</h5>
+                    <p>
+                        Your one-stop shop for fashion, electronics, and home essentials.
+                        Best prices, fast delivery, and quality products you can trust.
+                    </p>
                 </div>
 
-                <hr class="mt-4" />
-                <div class="text-center small">
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h6 class="fw-bold mb-3">Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="footer-link">Home</a></li>
+                        <li><a href="/Product" class="footer-link">Products</a></li>
+                        <li><a href="/Cart" class="footer-link">Cart</a></li>
+                        <li><a asp-controller="Home" asp-action="About" class="footer-link">About Us</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact & Social -->
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <h6 class="fw-bold mb-3">Contact Us</h6>
+                    <p class="mb-1">📍 Wakad, Pune, India</p>
+                    <p class="mb-1">📞 +91 93223 95458</p>
+                    <p class="mb-3">✉️ support@onlineshopping.com</p>
+
+                    @* <!-- Social Media Icons --> *@
+                    @* <div class="d-flex justify-content-center gap-3"> *@
+                    @*     <a href="#"><i class="bi bi-facebook fs-5 text-white"></i></a> *@
+                    @*     <a href="#"><i class="bi bi-instagram fs-5 text-white"></i></a> *@
+                    @*     <a href="#"><i class="bi bi-twitter fs-5 text-white"></i></a> *@
+                    @*     <a href="#"><i class="bi bi-whatsapp fs-5 text-white"></i></a> *@
+                    @* </div> *@
+                </div>
+
+            </div>
+
+            <hr class="mt-4" style="border-color: rgba(255,255,255,0.3);" />
+
+            <!-- Centered Footer Text -->
+            <div class="row">
+                <div class="col-12 text-center small">
                     © @DateTime.Now.Year OnlineShoppingApplication — All Rights Reserved.
                 </div>
             </div>
         </div>
     </footer>
+
+    <!-- Bootstrap Icons (Add this in your layout if not already included) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -6,18 +6,57 @@
 <!-- Banner Carousel -->
 <div id="homeCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
     <div class="carousel-inner">
+
+        <!-- First Slide -->
         <div class="carousel-item active">
-            <img src="/images/front-view-cyber-monday-shopping-cart-with-bags-copy-space.jpg" class="d-block w-100 banner-img">
+            <section class="about-hero d-flex align-items-center text-text-md-startark text-warning position-relative"
+                     style="background: url('@Url.Content("~/Images/E Commerce1.png")') center no-repeat; background-size: cover; height: 300px;">
+                <div class="overlay"></div>
+                <div class="container position-relative">
+                    @* <h1 class="fw-bold text-shadow">Fresh Picks <br /> Just Landed</h1> *@
+                    @* <p class="fw-bold text-shadow">Discover the latest trends and best sellers..</p> *@
+                </div>
+            </section>
         </div>
+
+        <!-- Second Slide -->
         <div class="carousel-item">
-            <img src="/images/E-commerce-company1.jpg" class="d-block w-100 banner-img">
+            <section class="about-hero d-flex align-items-center text-text-md-startark text-warning position-relative"
+                     style="background: url('@Url.Content("~/images/E-commerce-company1.jpg")') center/cover no-repeat; height: 300px;">
+                <div class="overlay"></div>
+                <div class="container position-relative">
+                    @* <h1 class="fw-bold text-shadow">This Week Only:<br /> Mega Deals</h1> *@
+                    @* <p class="fw-bold text-shadow">Don’t miss our exclusive discounts..</p> *@
+                </div>
+            </section>
         </div>
+
+        <!-- Third Slide -->
         <div class="carousel-item">
-            <img src="/images/ei2.jpg" class="d-block w-100 banner-img">
+            <section class="about-hero d-flex align-items-center text-text-md-startark text-warning position-relative"
+                     style="background: url('@Url.Content("~/images/ei2.jpg")') center/cover no-repeat; height: 300px;">
+                <div class="overlay"></div>
+                <div class="container position-relative">
+                    @* <h1 class="fw-bold text-shadow">Your One-Stop Online <br />Shopping Destination</h1> *@
+                    @* <p class="fw-bold text-shadow">Fashion, electronics, and more — all in one place.</p> *@
+                </div>
+            </section>
         </div>
+
+        <!-- Fourth Slide -->
+        <div class="carousel-item">
+            <section class="about-hero d-flex align-items-center text-text-md-startark text-warning position-relative"
+                     style="background: url('@Url.Content("~/images/front-view-cyber-monday-shopping-cart-with-bags-copy-space.jpg")') center/cover no-repeat; height: 300px;">
+                <div class="overlay"></div>
+                <div class="container position-relative">
+                    @* <h1 class="fw-bold text-shadow">Free Shipping on<br /> Orders Over ₹999</h1> *@
+                    @* <p class="fw-bold text-shadow">Fast delivery, straight to your door.</p> *@
+                </div>
+            </section>
+        </div>
+
     </div>
 </div>
-
 <!-- Categories -->
 <div class="container">
     @foreach (var category in Model)

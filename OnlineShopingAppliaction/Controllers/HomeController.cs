@@ -26,6 +26,11 @@ namespace OnlineShopingAppliaction.Controllers
             return View(categoriesWithProducts);
         }
 
+        public IActionResult About()
+        {
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();
