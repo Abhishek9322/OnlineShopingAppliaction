@@ -44,18 +44,29 @@
                                     </p>
 
                                     <p class="card-text text-muted mb-1">
-                                        Price: ₹@item.Product.Price <del class="text-danger"></del>   @*<!--₹@(item.Product.Price * 2)-->*@ 
+                                        Price: ₹@item.Product.Price
                                     </p>
                                     <p class="card-text text-success mb-1">Discount: -₹@(ViewData[$"Discount_{item.Id}"] ?? 0)</p>
                                     <p class="fw-bold text-dark mb-2">Final: ₹@(ViewData[$"Final_{item.Id}"] ?? (item.Product.Price * item.Quantity))</p>
 
-                                    <a href="/Cart/RemoveFromCart/@item.Id" class="btn btn-outline-danger btn-sm">❌ Remove</a>
-                                    <a href="/Product/Index" class="btn btn-outline-primary">← Back to Shopping</a>
+                                    <div class="d-flex gap-2">
+                                        <a href="/Cart/RemoveFromCart/@item.Id" class="btn btn-outline-danger btn-sm">❌ Remove</a>
+
+                                        <!-- ✅ Individual Place Order button -->
+                                        <form asp-controller="Order" asp-action="Checkout" method="get" class="d-inline">
+                                            <input type="hidden" name="cartItemId" value="@item.Id" />
+                                            <button type="submit" class="btn btn-secondary btn-sm">Place Order</button>
+                                        </form>
+                                        <a href="/Product/Index" class="btn btn-outline-primary btn-sm">← Back</a>
+
+                                       
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 }
+
             </div>
 
             <!-- Right Section: Price Summary -->
@@ -74,7 +85,9 @@
                         <span>Total Amount</span>
                         <span>₹@ViewBag.FinalTotal</span>
                     </div>
-                    <a href="/Order/PlaceOrder" class="btn btn-dark w-100 mt-3">PLACE ORDER</a>
+                    <form asp-controller="Order" asp-action="Checkout" method="get">
+                        <button type="submit" class="btn btn-dark w-100 mt-3">PLACE ORDER</button>
+                    </form>
                 </div>
             </div>
         </div>

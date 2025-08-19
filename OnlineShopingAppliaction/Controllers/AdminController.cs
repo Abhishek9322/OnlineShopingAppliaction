@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OnlineShopingAppliaction.Data;
 
 namespace OnlineShopingAppliaction.Controllers
@@ -21,33 +22,30 @@ namespace OnlineShopingAppliaction.Controllers
             return View();
         }
 
-        public IActionResult Users()
+        public async Task<IActionResult> Users()
         {
             ViewBag.CurrentAdmin = User.Identity?.Name;
-            var users = _context.AppUsers.ToList();
+            var users = await _context.AppUsers.ToListAsync();
             return View(users);
         }
-
         [HttpPost]
-        public IActionResult DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = _context.AppUsers.Find(id);
+            var user = await _context.AppUsers.FindAsync(id);
             if (user == null) return NotFound();
 
-            if (user.UserName == User.Identity?.Name)        
+            if (user.UserName == User.Identity?.Name)
             {
                 TempData["Error"] = "Admin cannot delete himself";
                 return RedirectToAction("Users");
             }
 
             _context.AppUsers.Remove(user);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-
-            TempData["Success"] = $" User {user.UserName} has been deleted successfully.";
+            TempData["Success"] = $"User {user.UserName} has been deleted successfully.";
             return RedirectToAction("Users");
         }
-
 
 
     }

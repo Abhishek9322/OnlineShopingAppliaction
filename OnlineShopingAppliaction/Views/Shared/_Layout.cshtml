@@ -27,12 +27,12 @@
 
         /* Navbar */
         .navbar {
-            background-color: #F8FAFC; /* Light header background */
+            background-color: #F8FAFC;
             box-shadow: 0 2px 10px rgba(0,0,0,0.15);
         }
 
         .navbar-brand {
-            color: #0f172a !important; /* Dark text for contrast */
+            color: #0f172a !important;
             font-weight: bold;
             font-size: 1.3rem;
             transition: transform 0.3s ease, color 0.3s ease;
@@ -40,11 +40,11 @@
 
             .navbar-brand:hover {
                 transform: scale(1.05);
-                color: #1d4ed8 !important; /* Blue hover */
+                color: #1d4ed8 !important;
             }
 
         .nav-link {
-            color: #0f172a !important; /* Dark text for visibility */
+            color: #0f172a !important;
             font-weight: 500;
             transition: color 0.3s ease;
         }
@@ -64,23 +64,13 @@
                 background-color: #e2e8f0;
             }
 
-        .btn-login {
+        .btn-login, .btn-register {
             background-color: #D9EAFD;
             color: #0f172a;
             border: none;
         }
 
-            .btn-login:hover {
-                background-color: #bcd3f6;
-            }
-
-        .btn-register {
-            background-color: #D9EAFD;
-            color: #0f172a;
-            border: none;
-        }
-
-            .btn-register:hover {
+            .btn-login:hover, .btn-register:hover {
                 background-color: #bcd3f6;
             }
 
@@ -119,16 +109,6 @@
                     text-decoration: underline;
                 }
 
-
-        .footer-link {
-            color: #fff;
-            text-decoration: none;
-        }
-
-            .footer-link:hover {
-                text-decoration: underline;
-            }
-
         #searchFormContainer input.form-control {
             border: 2px solid #D9EAFD;
         }
@@ -142,15 +122,6 @@
 
             #searchFormContainer button.btn-search:hover {
                 background-color: #bcd3f6;
-            }
-
-        .footer-link {
-            color: inherit;
-            text-decoration: none;
-        }
-
-            .footer-link:hover {
-                text-decoration: underline;
             }
     </style>
 </head>
@@ -171,7 +142,7 @@
                                asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Product" asp-action="Index">Available Products</a>
+                            <a class="nav-link" asp-controller="Product" asp-action="Index">Products Category</a>
                         </li>
 
                         @if (HttpContextAccessor.HttpContext.User.IsInRole("Admin"))
@@ -179,53 +150,43 @@
                             <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Create">Add Product</a></li>
                             <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Users">Manage Users</a></li>
                             <li class="nav-item"><a class="nav-link" asp-controller="Category" asp-action="Index">Manage Categories</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Order" asp-action="AdminItems">Received Orders</a></li>
                         }
                     </ul>
 
                     <!-- Right Menu -->
-                 
-
                     <ul class="navbar-nav">
                         <li class="nav-item me-2">
                             <button id="searchToggle" class="btn btn-light btn-sm">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                     class="bi bi-search" viewBox="0 0 16 16">
-                                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1
-                                               1 0 0 0 1.415-1.415l-3.85-3.85zm-5.242 1.106a5
-                                                5 0 1 1 0-10 5 5 0 0 1 0 10z" />
-                                </svg>
-
+                                <i class="bi bi-search"></i>
                             </button>
                         </li>
 
-                        <!-- Hidden Search Form -->
                         <li class="nav-item me-2" id="searchFormContainer" style="display:none;">
                             <form method="get" asp-controller="Product" asp-action="Index" class="d-flex">
                                 <input type="text" name="searchQuery" class="form-control form-control-sm me-1"
                                        placeholder="Search products..." value="@ViewBag.SearchQuery" />
                                 <button type="submit" class="btn btn-search btn-sm">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
-                                         class="bi bi-search" viewBox="0 0 16 16">
-                                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1
-                                               1 0 0 0 1.415-1.415l-3.85-3.85zm-5.242 1.106a5
-                                                5 0 1 1 0-10 5 5 0 0 1 0 10z" />
-                                    </svg>
+                                    <i class="bi bi-search"></i>
                                 </button>
                             </form>
                         </li>
+
                         <li class="nav-item">
                             <a class="btn btn-cart btn-sm me-2" asp-controller="Cart" asp-action="Index">🛒 Cart</a>
                         </li>
 
                         @if (HttpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
                         {
-                            <!-- Dropdown for Update Profile -->
+                            <!-- Profile Dropdown -->
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle fw-bold text-dark" href="#" role="button" data-bs-toggle="dropdown">
                                     👤 @HttpContextAccessor.HttpContext.User.Identity.Name
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" asp-controller="Profile" asp-action="Edit">Update Profile</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Order" asp-action="My">My Orders</a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">Logout</a></li>
                                 </ul>
                             </li>
@@ -248,22 +209,14 @@
     <main class="container mt-4">
         @RenderBody()
     </main>
-    <br />
-
+    <br/>
     <footer style="background-color: #BCCCDC; padding-top: 2rem; padding-bottom: 1rem; color: #fff;">
         <div class="container text-center">
             <div class="row justify-content-center">
-
-                <!-- Company Info -->
                 <div class="col-lg-4 col-md-6 mb-4">
                     <h5 class="fw-bold mb-3">🛒 OnlineShopping</h5>
-                    <p>
-                        Your one-stop shop for fashion, electronics, and home essentials.
-                        Best prices, fast delivery, and quality products you can trust.
-                    </p>
+                    <p>Your one-stop shop for fashion, electronics, and home essentials.</p>
                 </div>
-
-                <!-- Quick Links -->
                 <div class="col-lg-2 col-md-6 mb-4">
                     <h6 class="fw-bold mb-3">Quick Links</h6>
                     <ul class="list-unstyled">
@@ -273,28 +226,16 @@
                         <li><a asp-controller="Home" asp-action="About" class="footer-link">About Us</a></li>
                     </ul>
                 </div>
-
-                <!-- Contact & Social -->
                 <div class="col-lg-3 col-md-6 mb-4">
                     <h6 class="fw-bold mb-3">Contact Us</h6>
                     <p class="mb-1">📍 Wakad, Pune, India</p>
                     <p class="mb-1">📞 +91 93223 95458</p>
                     <p class="mb-3">✉️ support@onlineshopping.com</p>
-
-                    @* <!-- Social Media Icons --> *@
-                    @* <div class="d-flex justify-content-center gap-3"> *@
-                    @*     <a href="#"><i class="bi bi-facebook fs-5 text-white"></i></a> *@
-                    @*     <a href="#"><i class="bi bi-instagram fs-5 text-white"></i></a> *@
-                    @*     <a href="#"><i class="bi bi-twitter fs-5 text-white"></i></a> *@
-                    @*     <a href="#"><i class="bi bi-whatsapp fs-5 text-white"></i></a> *@
-                    @* </div> *@
                 </div>
-
             </div>
 
             <hr class="mt-4" style="border-color: rgba(255,255,255,0.3);" />
 
-            <!-- Centered Footer Text -->
             <div class="row">
                 <div class="col-12 text-center small">
                     © @DateTime.Now.Year OnlineShoppingApplication — All Rights Reserved.
@@ -303,27 +244,17 @@
         </div>
     </footer>
 
-    <!-- Bootstrap Icons (Add this in your layout if not already included) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
-
-    @RenderSection("Scripts", required: false)
 
     <script>
         document.getElementById('searchToggle').addEventListener('click', function () {
             const searchForm = document.getElementById('searchFormContainer');
-            if (searchForm.style.display === 'none') {
-                searchForm.style.display = 'block';
-            } else {
-                searchForm.style.display = 'none';
-            }
+            searchForm.style.display = (searchForm.style.display === 'none') ? 'block' : 'none';
         });
     </script>
 
+    @RenderSection("Scripts", required: false)
 </body>
 </html>

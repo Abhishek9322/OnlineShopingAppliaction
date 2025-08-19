@@ -1,0 +1,98 @@
+﻿@model IEnumerable<OnlineShopingAppliaction.Models.Order>
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4 text-center fw-bold">My Orders</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center shadow-sm rounded">
+            You have not placed any orders yet.
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var order in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm border-0 rounded-3 h-100">
+
+                        <!-- Header -->
+                        <div class="card-header d-flex justify-content-between align-items-center"
+                             style="background-color:#D9EAFD; color:#000; font-weight:600;">
+                            <span>Order #@order.Id</span>
+                            <span class="badge @(order.Status == "Cancelled" ? "bg-danger" : "bg-secondary")">
+                                @order.Status
+                            </span>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="card-body" style="background-color:#F8FAFC;">
+                            <p class="mb-1"><strong>Date:</strong> @order.CreatedAt.ToString("dd-MMM-yyyy")</p>
+                            <p class="mb-2"><strong>Total:</strong> ₹@order.Subtotal</p>
+
+                            <hr class="my-2" />
+
+                            <h6 class="fw-bold">Products</h6>
+                            <div class="d-flex flex-column gap-2">
+                                @foreach (var item in order.Items.Take(2))
+                                {
+                                    <div class="d-flex align-items-center rounded shadow-sm p-2"
+                                         style="background-color:white; border:1px solid #eee;">
+                                        <img src="@item.Product.ImagePath"
+                                             alt="@item.Product.Name"
+                                             class="rounded"
+                                             style="width:60px; height:60px; object-fit:cover;" />
+                                        <div class="ms-3 flex-grow-1">
+                                            <h6 class="mb-1">@item.Product.Name</h6>
+                                            <small class="text-muted">
+                                                Qty: @item.Quantity × ₹@item.UnitPrice
+                                            </small>
+                                        </div>
+                                    </div>
+                                }
+                                @if (order.Items.Count > 2)
+                                {
+                                    <div class="text-muted small">+ @((order.Items.Count) - 2) more items</div>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="card-footer bg-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a asp-action="Details" asp-route-id="@order.Id"
+                                   class="btn text-dark fw-semibold btn-sm px-3"
+                                   style="background-color:#D9EAFD; border:none; border-radius:50px;">
+                                    View Details
+                                </a>
+
+                                @if (order.Status == "Placed")
+                                {
+                                    <form asp-action="CancelOrder" method="post" class="m-0">
+                                        <input type="hidden" name="orderId" value="@order.Id" />
+                                        <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                }
+                                else if (order.Status == "Cancelled")
+                                {
+                                    <form asp-action="RemoveOrder" method="post" class="m-0">
+                                        <input type="hidden" name="orderId" value="@order.Id" />
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                                            Remove
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

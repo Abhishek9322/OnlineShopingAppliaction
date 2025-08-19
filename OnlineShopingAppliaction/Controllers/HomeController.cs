@@ -17,11 +17,11 @@ namespace OnlineShopingAppliaction.Controllers
             _context = context;
         }
   
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var categoriesWithProducts = _context.Categories
+            var categoriesWithProducts =await _context.Categories
                  .Include(c => c.Products)
-                 .ToList();
+                 .ToListAsync();
 
             return View(categoriesWithProducts);
         }

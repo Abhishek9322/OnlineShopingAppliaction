@@ -1,0 +1,93 @@
+﻿@model OnlineShopingAppliaction.Models.Order
+@{
+    ViewData["Title"] = "Order Details";
+}
+
+<div class="container my-5">
+    <div class="card shadow-lg border-0 rounded-4" style="background-color:#F8FAFC;">
+        <!-- Header -->
+        <div class="card-header text-center border-0 rounded-top-4" style="background-color:#0f172a; color:#fff;">
+            <h4 class="fw-bold mb-0">Order #@Model.Id - Details</h4>
+        </div>
+
+        <div class="card-body p-4">
+            <!-- Order Summary -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-4 col-sm-6">
+                    <div class="p-3 rounded-3 shadow-sm" style="background:#fff;">
+                        <p class="mb-1 text-muted">Date</p>
+                        <p class="fw-semibold">@Model.CreatedAt.ToString("dd-MMM-yyyy")</p>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <div class="p-3 rounded-3 shadow-sm" style="background:#fff;">
+                        <p class="mb-1 text-muted">Status</p>
+                        <span class="badge rounded-pill px-3 py-2 text-black" style="background-color:#D9EAFD; font-size:0.9rem;">
+                            @Model.Status
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-12">
+                    <div class="p-3 rounded-3 shadow-sm text-md-end text-center" style="background:#fff;">
+                        <p class="mb-1 text-muted">Total</p>
+                        <p class="fw-bold fs-5 text-dark">₹@Model.Total</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Details -->
+            <h5 class="fw-bold mb-3 text-secondary">Shipping Details</h5>
+            <div class="p-3 rounded-3 shadow-sm mb-4" style="background:#fff;">
+                <p class="mb-2"><strong>Name:</strong> @Model.ShippingFullName</p>
+                <p class="mb-2"><strong>Phone:</strong> @Model.ShippingPhone</p>
+                <p class="mb-2">
+                    <strong>Address:</strong>
+                    @Model.ShippingAddressLine1
+                    @(string.IsNullOrWhiteSpace(Model.ShippingAddressLine2) ? "" : ", " + Model.ShippingAddressLine2),
+                    @Model.ShippingCity - @Model.ShippingPincode,
+                    @Model.ShippingState,
+                    @Model.ShippingCountry
+                </p>
+                @if (!string.IsNullOrWhiteSpace(Model.ShippingNotes))
+                {
+                    <p class="mb-0"><strong>Notes:</strong> @Model.ShippingNotes</p>
+                }
+            </div>
+
+            <!-- Ordered Items -->
+            <h5 class="fw-bold mb-3 text-secondary">Ordered Items</h5>
+            <div class="table-responsive">
+                <table class="table table-borderless align-middle shadow-sm rounded-3 overflow-hidden">
+                    <thead style="background-color:#e2e8f0;">
+                        <tr>
+                            <th class="py-3">Product</th>
+                            <th class="py-3">Price</th>
+                            <th class="py-3">Qty</th>
+                            <th class="py-3 text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr style="background:#fff;">
+                                <td class="fw-semibold">@item.ProductName</td>
+                                <td>₹@item.UnitPrice</td>
+                                <td>@item.Quantity</td>
+                                <td class="fw-bold text-end">₹@(item.UnitPrice * item.Quantity)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="text-end mt-4">
+                <a asp-action="My"
+                   class="btn rounded-pill px-4 py-2 shadow-sm"
+                   style="background-color:#D9EAFD; color:#0f172a; font-weight:500;">
+                    ← Back to Orders
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

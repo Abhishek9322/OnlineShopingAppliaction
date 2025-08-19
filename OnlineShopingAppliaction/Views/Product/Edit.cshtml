@@ -32,10 +32,18 @@
         <!-- Category -->
         <div class="mb-3">
             <label class="form-label">Category</label>
-            <select asp-for="CategoryId" class="form-control form-control-sm" asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
+            <select asp-for="CategoryId" class="form-control form-control-sm"
+                    asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
                 <option value="">-- Select Category --</option>
             </select>
             <span asp-validation-for="CategoryId" class="text-danger"></span>
+        </div>
+
+        <!-- Stock (Quantity) -->
+        <div class="mb-3">
+            <label class="form-label">Stock (Quantity)</label>
+            <input asp-for="Stock" type="number" min="0" class="form-control form-control-sm" />
+            <span asp-validation-for="Stock" class="text-danger"></span>
         </div>
 
         <div class="mb-3">

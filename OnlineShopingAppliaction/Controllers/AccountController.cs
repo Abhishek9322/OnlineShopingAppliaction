@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
 using OnlineShopingAppliaction.Service;
@@ -21,30 +22,29 @@ namespace OnlineShopingAppliaction.Controllers
 
 
         [HttpPost]
-        public IActionResult Register(AppUser user)
+        public async Task<IActionResult> Register(AppUser user)
         {
-            if (_context.AppUsers.Any(u => u.UserName == user.UserName))
+            if (await _context.AppUsers.AnyAsync(u => u.UserName == user.UserName))
             {
                 ModelState.AddModelError("", "Username already exists");
                 return View(user);
             }
 
-            if(string.IsNullOrEmpty(user.PasswordHash))
+            if (string.IsNullOrEmpty(user.PasswordHash))
             {
                 ModelState.AddModelError("Passwordhash", "Password is required.");
+                return View(user);
             }
-
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
 
-            if(string.IsNullOrEmpty(user.Role))
-                  user.Role = "User"; // Default role
+            if (string.IsNullOrEmpty(user.Role))
+                user.Role = "User"; // Default role
 
-            _context.AppUsers.Add(user);
-            _context.SaveChanges();
+            await _context.AppUsers.AddAsync(user);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("Login");
-
 
         }
 
@@ -53,9 +53,9 @@ namespace OnlineShopingAppliaction.Controllers
 
 
         [HttpPost]
-        public IActionResult Login(string username, string password)
+        public  async Task<IActionResult> Login(string username, string password)
         {
-            var user = _context.AppUsers.FirstOrDefault(u => u.UserName == username);
+            var user = await _context.AppUsers.FirstOrDefaultAsync(u => u.UserName == username);
             if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
                 ViewBag.Error = "Invalid credentials";
