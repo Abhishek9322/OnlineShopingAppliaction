@@ -18,7 +18,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddSession();
+//builder.Services.AddSession();
 builder.Services.AddScoped<JwtService>();
 
 

@@ -15,7 +15,6 @@ namespace OnlineShopingAppliaction.Controllers
         private readonly ApplicationDbContext _context;
         private const decimal DISCOUNT_THRESHOLD = 5000;
         private const decimal DISCOUNT_PERCENT = 10;
-
         public CartController(ApplicationDbContext context) { _context = context; }
 
         
@@ -115,7 +114,7 @@ namespace OnlineShopingAppliaction.Controllers
 
                 total += productTotal;
                 totalDiscount += productDiscount;
-                finalTotal += (productTotal - productDiscount);
+                finalTotal += productTotal - productDiscount;
 
                 // Store discount & final total per product in ViewBag
                 ViewData[$"Discount_{item.Id}"] = productDiscount;
@@ -307,7 +306,7 @@ namespace OnlineShopingAppliaction.Controllers
 
                 total += productTotal;
                 totalDiscount += productDiscount;
-                finalTotal += (productTotal - productDiscount);
+                finalTotal += productTotal - productDiscount;
             }
         }
 

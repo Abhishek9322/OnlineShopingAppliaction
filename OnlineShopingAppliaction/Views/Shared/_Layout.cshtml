@@ -76,19 +76,25 @@
 
         /* Dropdown Menu */
         .dropdown-menu {
-            background: #1c1c1c;
+            background: #fff;
             border: none;
         }
 
         .dropdown-item {
-            color: #fff;
+            color: #000;
             transition: background 0.3s;
         }
 
             .dropdown-item:hover {
-                background: #ffe259;
+                background: #bcd3f6;
                 color: #000;
             }
+
+        /* Open dropdown on hover */
+        .navbar .dropdown:hover .dropdown-menu {
+            display: block;
+            margin-top: 0;
+        }
 
         /* Footer */
         footer {
@@ -147,10 +153,18 @@
 
                         @if (HttpContextAccessor.HttpContext.User.IsInRole("Admin"))
                         {
-                            <li class="nav-item"><a class="nav-link" asp-controller="Product" asp-action="Create">Add Product</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Users">Manage Users</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Category" asp-action="Index">Manage Categories</a></li>
-                            <li class="nav-item"><a class="nav-link" asp-controller="Order" asp-action="AdminItems">Received Orders</a></li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                     Admin Panel
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                    <li><a class="dropdown-item" asp-controller="Product" asp-action="Create">Add Product</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Admin" asp-action="Users">Manage Users</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Category" asp-action="Index">Manage Categories</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Order" asp-action="AdminItems">Received Orders</a></li>
+                                </ul>
+                            </li>
                         }
                     </ul>
 
@@ -209,7 +223,7 @@
     <main class="container mt-4">
         @RenderBody()
     </main>
-    <br/>
+    <br />
     <footer style="background-color: #BCCCDC; padding-top: 2rem; padding-bottom: 1rem; color: #fff;">
         <div class="container text-center">
             <div class="row justify-content-center">
@@ -252,6 +266,14 @@
         document.getElementById('searchToggle').addEventListener('click', function () {
             const searchForm = document.getElementById('searchFormContainer');
             searchForm.style.display = (searchForm.style.display === 'none') ? 'block' : 'none';
+        });
+
+        // Ensure dropdown works on click for mobile too
+        document.querySelectorAll('.dropdown-toggle').forEach(function (element) {
+            element.addEventListener('click', function (e) {
+                let dropdown = new bootstrap.Dropdown(element);
+                dropdown.toggle();
+            });
         });
     </script>
 

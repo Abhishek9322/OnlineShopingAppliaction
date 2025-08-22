@@ -255,7 +255,7 @@ namespace OnlineShopingAppliaction.Controllers
                 var lineDiscount = line > DISCOUNT_THRESHOLD ? line * (DISCOUNT_PERCENT / 100m) : 0m;
                 subtotal += line;
                 discount += lineDiscount;
-                finalTotal += (line - lineDiscount);
+                finalTotal += line - lineDiscount;
             }
 
             vm.Items = items;
@@ -334,7 +334,7 @@ namespace OnlineShopingAppliaction.Controllers
                 var lineDiscount = line > DISCOUNT_THRESHOLD ? line * (DISCOUNT_PERCENT / 100m) : 0m;
                 subtotal += line;
                 discount += lineDiscount;
-                finalTotal += (line - lineDiscount);
+                finalTotal += line - lineDiscount;
             }
 
             await using var tx = await _context.Database.BeginTransactionAsync();
@@ -380,8 +380,8 @@ namespace OnlineShopingAppliaction.Controllers
                         ProductName = it.Product.Name,
                         UnitPrice = it.Product.Price,
                         Quantity = it.Quantity,
-                        LineDiscount = (it.Product.Price * it.Quantity) > DISCOUNT_THRESHOLD ? (it.Product.Price * it.Quantity) * (DISCOUNT_PERCENT / 100m) : 0m,
-                        LineTotal = (it.Product.Price * it.Quantity) - ((it.Product.Price * it.Quantity) > DISCOUNT_THRESHOLD ? (it.Product.Price * it.Quantity) * (DISCOUNT_PERCENT / 100m) : 0m)
+                        LineDiscount = it.Product.Price * it.Quantity > DISCOUNT_THRESHOLD ? it.Product.Price * it.Quantity * (DISCOUNT_PERCENT / 100m) : 0m,
+                        LineTotal = it.Product.Price * it.Quantity - (it.Product.Price * it.Quantity > DISCOUNT_THRESHOLD ? it.Product.Price * it.Quantity * (DISCOUNT_PERCENT / 100m) : 0m)
                     };
                     _context.OrderItems.Add(orderItem);
 

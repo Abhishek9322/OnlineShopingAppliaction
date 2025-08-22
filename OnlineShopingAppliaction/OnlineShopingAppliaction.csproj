@@ -18,4 +18,9 @@
     <PackageReference Include="Microsoft.jQuery.Unobtrusive.Validation" Version="4.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Repository\Interfaces\" />
+    <Folder Include="Repository\Implementations\" />
+  </ItemGroup>
+
 </Project>
