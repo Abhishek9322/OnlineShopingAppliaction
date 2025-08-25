@@ -60,12 +60,12 @@ namespace OnlineShopingAppliaction.Controllers
 
                 foreach (var cartItem in cartItems)
                 {
-                  await  _context.OrderItems.AddAsync(new OrderItem
+                    await _context.OrderItems.AddAsync(new OrderItem
                     {
                         OrderId = order.Id,
                         ProductId = cartItem.ProductId,
                         ProductName = cartItem.Product.Name,
-                        UnitPrice = cartItem.Product.Price,  
+                        UnitPrice = cartItem.Product.Price,
                         Quantity = cartItem.Quantity,
                         LineDiscount = 0m,
                         LineTotal = cartItem.Product.Price * cartItem.Quantity
@@ -127,7 +127,7 @@ namespace OnlineShopingAppliaction.Controllers
                 await _context.Orders.AddAsync(order);
                 await _context.SaveChangesAsync();
 
-              await _context.OrderItems.AddAsync(new OrderItem
+                await _context.OrderItems.AddAsync(new OrderItem
                 {
                     OrderId = order.Id,
                     ProductId = cartItem.ProductId,
@@ -141,7 +141,7 @@ namespace OnlineShopingAppliaction.Controllers
                 //Remove product from cart after placing oredr
 
                 cartItem.Product.Stock -= cartItem.Quantity;
-                 _context.Products.Update(cartItem.Product);
+                _context.Products.Update(cartItem.Product);
 
                 _context.CartItems.Remove(cartItem);
 
@@ -162,9 +162,9 @@ namespace OnlineShopingAppliaction.Controllers
 
         //cancle oredr
         [HttpPost]
-        public  async Task<IActionResult> CancelOrder(int orderId)
+        public async Task<IActionResult> CancelOrder(int orderId)
         {
-            var order =await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
             if (order == null)
             {
                 return NotFound();
@@ -172,7 +172,7 @@ namespace OnlineShopingAppliaction.Controllers
 
             // Change status instead of deleting
             order.Status = "Cancelled";
-           await  _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             return RedirectToAction("My"); // go back to orders list
         }
@@ -181,7 +181,7 @@ namespace OnlineShopingAppliaction.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveOrder(int orderId)
         {
-            var order =await _context.Orders
+            var order = await _context.Orders
                         .FirstOrDefaultAsync(o => o.Id == orderId);
 
             if (order != null)
@@ -337,7 +337,7 @@ namespace OnlineShopingAppliaction.Controllers
                 finalTotal += line - lineDiscount;
             }
 
-            await using var tx = await _context.Database.BeginTransactionAsync();
+            await using var OrderTransactionStart = await _context.Database.BeginTransactionAsync();
             try
             {
                 var order = new Order
@@ -362,7 +362,7 @@ namespace OnlineShopingAppliaction.Controllers
                 };
 
                 _context.Orders.Add(order);
-                await _context.SaveChangesAsync(); 
+                await _context.SaveChangesAsync();
 
                 foreach (var it in items)
                 {
@@ -394,20 +394,20 @@ namespace OnlineShopingAppliaction.Controllers
                 }
 
                 await _context.SaveChangesAsync();
-                await tx.CommitAsync();
+                await OrderTransactionStart.CommitAsync();
 
                 TempData["Success"] = "Order placed successfully.";
                 return RedirectToAction("Details", new { id = order.Id });
             }
             catch (Exception ex)
             {
-                await tx.RollbackAsync();
+                await OrderTransactionStart.RollbackAsync();
                 TempData["Error"] = "Failed to place order: " + ex.Message;
                 return RedirectToAction("Index", "Cart");
             }
         }
 
-     
+
 
 
 
@@ -456,6 +456,93 @@ namespace OnlineShopingAppliaction.Controllers
 
             return View(items);
         }
-       
+
+
+        // [Authorize(Roles ="Admin")]
+        [HttpPost]
+        public async Task<IActionResult> UpdateOrderStatus(int orderId, string status)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null) return NotFound();
+
+
+            order.Status = status;
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = "Order status updated successfully !";
+            return RedirectToAction(nameof(AdminItems));
+
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public async Task<IActionResult> AssignOrderToDeliveryBoy(int orderId)
+        {
+            var order = await _context.Orders
+                .Include(o => o.User)
+                .FirstOrDefaultAsync(p => p.Id == orderId);
+            if (order == null) return NotFound();
+
+            var deliveryBoys = await _context.AppUsers
+                .Where(u => u.Role == "DeliveryBoy")
+                .ToListAsync();
+
+
+            ViewBag.DeliveryBoy = deliveryBoys;
+            return View(order);
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        public async Task<IActionResult> AssignOrderToDeliveryBoy(int orderId, int deliveryBoyId)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null) return NotFound();
+
+            order.DeliveryBoyId = deliveryBoyId;
+            order.Status = "Shipped";
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Order assigned successfully!";
+            return RedirectToAction(nameof(AdminItems));
+        }
+
+
+        [Authorize(Roles = "DeliveryBoy")]
+        [HttpGet]
+        public async Task<IActionResult> MyAssignedOrders()
+        {
+            int deliveryBoyId = GetCurrentUserId(); // your method to get current delivery boy ID
+
+            // Fetch all assigned orders including delivered ones
+            var orders = await _context.Orders
+                .Where(o => o.DeliveryBoyId == deliveryBoyId)  // Do not filter out delivered
+                .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+                .Include(o => o.User)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+
+            return View(orders);
+        }
+
+        [Authorize(Roles = "DeliveryBoy")]
+        [HttpPost]
+        public async Task<IActionResult> MarkOrderDelivered(int orderId)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+            if (order == null)
+                return NotFound();
+
+            int deliveryBoyId = GetCurrentUserId();
+            if (order.DeliveryBoyId != deliveryBoyId)
+                return Forbid();
+
+            order.Status = "Delivered";
+            await _context.SaveChangesAsync();
+
+            // Redirect back to the same page
+            return RedirectToAction(nameof(MyAssignedOrders));
+        }
+
     }
 }

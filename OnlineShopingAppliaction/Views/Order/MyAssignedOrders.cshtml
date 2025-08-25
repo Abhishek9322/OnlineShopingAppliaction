@@ -1,0 +1,88 @@
+﻿@model IEnumerable<OnlineShopingAppliaction.Models.Order>
+
+@{
+    ViewData["Title"] = "My Assigned Orders";
+}
+
+<div class="container mt-4">
+    <h2 class="fw-bold mb-4 text-dark">My Assigned Orders</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info shadow-sm rounded">No assigned orders yet.</div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var order in Model)
+            {
+                // Light red background if delivered
+                var cardStyle = order.Status == "Delivered" ? "background-color:#FEEAEA;" : "";
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm border-0 rounded-4 h-100" style="@cardStyle">
+                        <div class="card-body d-flex flex-column">
+
+                            <!-- Order Header -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Order #@order.Id</h5>
+                                <span class="badge @(order.Status == "Delivered" ? "bg-danger" : "bg-primary")">@order.Status</span>
+                            </div>
+
+                            <!-- Customer Info -->
+                            <div class="mb-2">
+                                <strong>Customer:</strong> @order.User?.UserName <br />
+                                <small class="text-muted">@order.User?.Email</small>
+                            </div>
+
+                            <!-- Shipping Address -->
+                            <div class="mb-2">
+                                <i class="bi bi-geo-alt-fill text-danger"></i>
+                                @order.ShippingAddressLine2 <br />
+                                <span class="text-muted small">Pincode: @order.ShippingPincode</span>
+                            </div>
+
+                            <!-- Products -->
+                            <h6 class="fw-bold mt-3">Products</h6>
+                            <div class="d-flex flex-column gap-2">
+                                @foreach (var item in order.Items)
+                                {
+                                    <div class="d-flex align-items-center rounded shadow-sm p-2"
+                                         style="background-color:white; border:1px solid #eee;">
+                                        <img src="@item.Product.ImagePath"
+                                             alt="@item.Product.Name"
+                                             class="rounded"
+                                             style="width:60px; height:60px; object-fit:cover;" />
+                                        <div class="ms-3 flex-grow-1">
+                                            <h6 class="mb-1">@item.Product.Name</h6>
+                                            <small class="text-muted">Qty: @item.Quantity × ₹@item.UnitPrice</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Mark as Delivered Button (only for non-delivered orders) -->
+                            @if (order.Status != "Delivered")
+                            {
+                                <form asp-action="MarkOrderDelivered" method="post" class="mt-3">
+                                    <input type="hidden" name="orderId" value="@order.Id" />
+                                    <button type="submit"
+                                            class="btn btn-sm w-100"
+                                            style="background-color:#D9EAFD; color:#000; border:none; border-radius:0.5rem; font-weight:500;">
+                                        Mark as Delivered
+                                    </button>
+                                </form>
+                            }
+
+                            <!-- Order Date -->
+                            <div class="mt-2 text-end">
+                                <small class="text-muted">Ordered on: @order.CreatedAt.ToString("dd MMM yyyy")</small>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

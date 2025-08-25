@@ -10,6 +10,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
+
 namespace OnlineShopingAppliaction.Controllers
 {
     public class ProductController : Controller
@@ -17,10 +18,12 @@ namespace OnlineShopingAppliaction.Controllers
 
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;    
+        
         public ProductController(ApplicationDbContext context , IWebHostEnvironment webHostEnvironment)
         { 
             _context = context;
             _webHostEnvironment = webHostEnvironment;
+            
         }
 
         //Available Products / Filter category  /search bar by product name or the category name 
@@ -42,6 +45,9 @@ namespace OnlineShopingAppliaction.Controllers
             if (!string.IsNullOrEmpty(searchQuery))
                 products = products.Where(u => u.Name.Contains(searchQuery) || u.Category.Name.Contains(searchQuery));
 
+            // Fetch categories with one sample product image each
+          
+
             ViewBag.Categories = await _context.Categories.ToListAsync();
             ViewBag.SelectedCategory = categoryId;
             ViewBag.SearchQuery = searchQuery;
@@ -61,7 +67,7 @@ namespace OnlineShopingAppliaction.Controllers
 
             if (product == null) return NotFound();
 
-            // ✅ Get all related products from same category except the current one
+            //Get all related products from same category except the current one
             var relatedProducts = await _context.Products
                                                 .Where(p => p.CategoryId == product.CategoryId && p.Id != id)
                                                 .ToListAsync();

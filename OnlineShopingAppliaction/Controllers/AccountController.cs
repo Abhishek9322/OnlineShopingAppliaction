@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
 using OnlineShopingAppliaction.Service;
+using System.Timers;
 
 namespace OnlineShopingAppliaction.Controllers
 {
@@ -40,8 +41,20 @@ namespace OnlineShopingAppliaction.Controllers
 
             if (string.IsNullOrEmpty(user.Role))
                 user.Role = "User"; // Default role
+            else
+            {
+                var allowedRoles = new[] { "Admin", "User", "DeliveryBoy" };
+                if (!allowedRoles.Contains(user.Role))
+                {
+                    ModelState.AddModelError("Role", "Invalid role selected");
+                    return View(user);
+                }
+            }
 
-            await _context.AppUsers.AddAsync(user);
+
+
+
+                await _context.AppUsers.AddAsync(user);
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Login");

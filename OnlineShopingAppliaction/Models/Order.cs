@@ -19,6 +19,12 @@ namespace OnlineShopingAppliaction.Models
 
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
 
+
+        // NEW FIELD: Assign Delivery Boy
+        public int? DeliveryBoyId { get; set; }
+        public AppUser DeliveryBoy { get; set; }
+
+
         [Required(ErrorMessage = "Full name is required")]
         [RegularExpression(@"^[A-Za-z\s]+$", ErrorMessage = "Full name can only contain letters and spaces")]
         [StringLength(50, MinimumLength = 3, ErrorMessage = "Full name must be between 3 and 50 characters")]

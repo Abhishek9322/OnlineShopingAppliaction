@@ -1,0 +1,35 @@
+﻿@model OnlineShopingAppliaction.Models.Order
+@{
+    ViewData["Title"] = "Assign Order to Delivery Boy";
+    var DeliveryBoy = ViewBag.DeliveryBoy as List<OnlineShopingAppliaction.Models.AppUser>;
+}
+
+<div class="container mt-4">
+    <h2>Assign Order</h2>
+    <hr />
+
+    <div class="card p-4 shadow">
+        <h4>Order Details</h4>
+        <p><strong>Order ID:</strong> @Model.Id</p>
+        <p><strong>Customer:</strong> @Model.User?.UserName (@Model.User?.Email)</p>
+        <p><strong>Current Status:</strong> @Model.Status</p>
+
+        <form asp-action="AssignOrderToDeliveryBoy" method="post">
+            <input type="hidden" name="orderId" value="@Model.Id" />
+
+            <div class="mb-3">
+                <label class="form-label">Select Delivery Boy</label>
+                <select name="deliveryBoyId" class="form-select" required>
+                    <option value="">-- Select --</option>
+                    @foreach (var boy in DeliveryBoy)
+                    {
+                        <option value="@boy.Id">@boy.UserName (@boy.Email)</option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success" style="background-color:#91C8E4; color:#000; border:none; border-radius:0.5rem;">Assign Order</button>
+            <a asp-action="AdminItems" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
