@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
+using OnlineShopingAppliaction.Repository.Interface;
+using OnlineShopingAppliaction.Repository.Repository;
 using OnlineShopingAppliaction.Service;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
@@ -20,6 +22,14 @@ builder.Services.AddHttpContextAccessor();
 
 //builder.Services.AddSession();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
+builder.Services.AddScoped<IAdminRepository , AdminRepository>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IHomeRepository, HomeRepository>();
 
 
 

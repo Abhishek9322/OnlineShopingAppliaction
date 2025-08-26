@@ -2,17 +2,18 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopingAppliaction.Data;
+using OnlineShopingAppliaction.Repository.Interface;
 
 namespace OnlineShopingAppliaction.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAdminRepository _adminRepository;
 
-        public AdminController(ApplicationDbContext context)
+        public AdminController(IAdminRepository adminRepository)
         {
-            _context = context;
+            _adminRepository = adminRepository;
         }
 
 
@@ -25,13 +26,13 @@ namespace OnlineShopingAppliaction.Controllers
         public async Task<IActionResult> Users()
         {
             ViewBag.CurrentAdmin = User.Identity?.Name;
-            var users = await _context.AppUsers.ToListAsync();
+            var users = await _adminRepository.GetAllUsersAsync();
             return View(users);
         }
         [HttpPost]
         public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = await _context.AppUsers.FindAsync(id);
+            var user = await _adminRepository.GetByIdAsync(id);
             if (user == null) return NotFound();
 
             if (user.UserName == User.Identity?.Name)
@@ -40,8 +41,7 @@ namespace OnlineShopingAppliaction.Controllers
                 return RedirectToAction("Users");
             }
 
-            _context.AppUsers.Remove(user);
-            await _context.SaveChangesAsync();
+            await _adminRepository.DeleteUserAsync(user);
 
             TempData["Success"] = $"User {user.UserName} has been deleted successfully.";
             return RedirectToAction("Users");

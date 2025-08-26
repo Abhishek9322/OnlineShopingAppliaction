@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using OnlineShopingAppliaction.Repository.Interface;
 
 
 namespace OnlineShopingAppliaction.Controllers
@@ -16,43 +17,29 @@ namespace OnlineShopingAppliaction.Controllers
     public class ProductController : Controller
     {
 
-        private readonly ApplicationDbContext _context;
+        private readonly IProductRepository _productRepo;
         private readonly IWebHostEnvironment _webHostEnvironment;    
         
-        public ProductController(ApplicationDbContext context , IWebHostEnvironment webHostEnvironment)
-        { 
-            _context = context;
+        public ProductController(IProductRepository productRepository, IWebHostEnvironment webHostEnvironment)
+        {
+            _productRepo = productRepository;
             _webHostEnvironment = webHostEnvironment;
             
         }
 
         //Available Products / Filter category  /search bar by product name or the category name 
 
-        private int GetCurrentUserId()
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null) throw new UnauthorizedAccessException("Invalid JWT Token");
-            return int.Parse(userIdClaim.Value);
-        }
+        private int GetCurrentUserId() =>
+              int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
+
 
         public async Task<IActionResult> Index(int? categoryId ,string searchQuery)
         {
-            var products = _context.Products.Include(p => p.Category).AsQueryable();
-
-            if (categoryId.HasValue)
-                products = products.Where(p => p.CategoryId == categoryId);
-
-            if (!string.IsNullOrEmpty(searchQuery))
-                products = products.Where(u => u.Name.Contains(searchQuery) || u.Category.Name.Contains(searchQuery));
-
-            // Fetch categories with one sample product image each
-          
-
-            ViewBag.Categories = await _context.Categories.ToListAsync();
+            var products = await _productRepo.GetAllAsync(categoryId, searchQuery);
+            ViewBag.Categories = await _productRepo.GetCategoriesAsync();
             ViewBag.SelectedCategory = categoryId;
             ViewBag.SearchQuery = searchQuery;
-
-            return View(await products.ToListAsync());
+            return View(products);
         }
 
 
@@ -61,19 +48,9 @@ namespace OnlineShopingAppliaction.Controllers
         //Product details + related products
         public async Task<IActionResult> Details(int id)
         {
-            var product = await _context.Products
-                                        .Include(p => p.Category)
-                                        .FirstOrDefaultAsync(p => p.Id == id);
-
+            var product = await _productRepo.GetByIdAsync(id);
             if (product == null) return NotFound();
-
-            //Get all related products from same category except the current one
-            var relatedProducts = await _context.Products
-                                                .Where(p => p.CategoryId == product.CategoryId && p.Id != id)
-                                                .ToListAsync();
-
-            ViewBag.RelatedProducts = relatedProducts;
-
+            ViewBag.RelatedProducts = await _productRepo.GetRelatedAsync(product.CategoryId, product.Id);
             return View(product);
         }
 
@@ -82,7 +59,7 @@ namespace OnlineShopingAppliaction.Controllers
         [HttpGet]
         public async Task<IActionResult> Create()
         {
-            ViewBag.Categories = await _context.Categories.ToListAsync();
+            ViewBag.Categories = await _productRepo.GetCategoriesAsync();
             return View();
         }
 
@@ -101,42 +78,42 @@ namespace OnlineShopingAppliaction.Controllers
 
             product.OwnerId = GetCurrentUserId();
 
+            // ✅ Handle image upload
             if (ImageFile != null && ImageFile.Length > 0)
             {
                 string uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
-                if (!Directory.Exists(uploadDir))
-                    Directory.CreateDirectory(uploadDir);
+                if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
 
                 string uniqueFileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
                 string filePath = Path.Combine(uploadDir, uniqueFileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
-                {
                     await ImageFile.CopyToAsync(stream);
-                }
 
                 product.ImagePath = "/uploads/" + uniqueFileName;
             }
 
             if (ModelState.IsValid)
             {
-                await _context.Products.AddAsync(product);
-                await _context.SaveChangesAsync();
+                await _productRepo.AddAsync(product);
                 return RedirectToAction("Index");
             }
 
-            ViewBag.Categories = await _context.Categories.ToListAsync();
+            ViewBag.Categories = await _productRepo.GetCategoriesAsync();
             return View(product);
         }
+
+        // Edit Product (GET)
+      
 
         //  Edit product
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id)
         {
-            var product =await _context.Products.FindAsync(id);
+            var product = await _productRepo.GetByIdAsync(id);
             if (product == null) return NotFound();
 
-            ViewBag.Categories =await _context.Categories.ToListAsync();
+            ViewBag.Categories = await _productRepo.GetCategoriesAsync();
             return View(product);
         }
 
@@ -145,34 +122,27 @@ namespace OnlineShopingAppliaction.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Product product, IFormFile? ImageFile)
         {
-            // Remove properties that are not posted or validated here
             ModelState.Remove("ImagePath");
             ModelState.Remove("Category");
             ModelState.Remove("Owner");
 
             if (product == null) return BadRequest();
-
-           
             if (product.Stock < 0)
-            {
                 ModelState.AddModelError(nameof(product.Stock), "Stock cannot be negative.");
-            }
 
-            var dbproduct = await _context.Products.FirstOrDefaultAsync(p => p.Id == product.Id);
+            var dbproduct = await _productRepo.GetByIdAsync(product.Id);
             if (dbproduct == null) return NotFound();
 
-            // ensure current admin owns the product
             var adminId = GetCurrentUserId();
             if (dbproduct.OwnerId != adminId) return Forbid();
 
-            // If model validation failed, return the view showing errors
             if (!ModelState.IsValid)
             {
-                ViewBag.Categories = _context.Categories.ToList();
+                ViewBag.Categories = await _productRepo.GetCategoriesAsync();
                 return View(product);
             }
 
-            // Update the tracked entity (dbproduct) — DO NOT attach the incoming 'product' object
+            // Update fields
             dbproduct.Name = product.Name;
             dbproduct.Description = product.Description;
             dbproduct.Price = product.Price;
@@ -180,10 +150,9 @@ namespace OnlineShopingAppliaction.Controllers
             dbproduct.CategoryId = product.CategoryId;
             dbproduct.Stock = product.Stock;
 
-            // Handle image upload if provided
+            // Handle image replacement
             if (ImageFile != null && ImageFile.Length > 0)
             {
-                // delete old image if exists
                 if (!string.IsNullOrEmpty(dbproduct.ImagePath))
                 {
                     string oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, dbproduct.ImagePath.TrimStart('/'));
@@ -192,38 +161,28 @@ namespace OnlineShopingAppliaction.Controllers
                 }
 
                 string uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
-                if (!Directory.Exists(uploadDir))
-                    Directory.CreateDirectory(uploadDir);
+                if (!Directory.Exists(uploadDir)) Directory.CreateDirectory(uploadDir);
 
                 string uniqueFileName = Guid.NewGuid() + Path.GetExtension(ImageFile.FileName);
                 string filePath = Path.Combine(uploadDir, uniqueFileName);
 
-                // async copy
                 using (var stream = new FileStream(filePath, FileMode.Create))
-                {
                     await ImageFile.CopyToAsync(stream);
-                }
 
                 dbproduct.ImagePath = "/uploads/" + uniqueFileName;
             }
 
             try
             {
-                // dbproduct is already tracked; EF will pick up changes
-                await _context.SaveChangesAsync();
+                await _productRepo.UpdateAsync(dbproduct);
                 return RedirectToAction("Index");
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                // concurrency conflict handling
-                ModelState.AddModelError("", "Unable to save changes. The product was modified by someone else. Please try again.");
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", "An error occurred while updating the product: " + ex.Message);
+                ModelState.AddModelError("", "Error while updating: " + ex.Message);
             }
 
-            ViewBag.Categories = _context.Categories.ToList();
+            ViewBag.Categories = await _productRepo.GetCategoriesAsync();
             return View(product);
         }
 
@@ -235,14 +194,10 @@ namespace OnlineShopingAppliaction.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var product = await _context.Products
-                                         .Include(p => p.Category)
-                                         .FirstOrDefaultAsync(p => p.Id == id);
-
+            var product = await _productRepo.GetByIdAsync(id);
             if (product == null) return NotFound();
 
-            bool hasOrders = await _context.OrderItems.AnyAsync(oi => oi.ProductId == id);
-            if (hasOrders)
+            if (await _productRepo.HasOrdersAsync(id))
             {
                 TempData["ErrorMessage"] = "Cannot delete product. It is linked to existing orders.";
                 return RedirectToAction("Index");
@@ -255,9 +210,7 @@ namespace OnlineShopingAppliaction.Controllers
                     System.IO.File.Delete(oldImagePath);
             }
 
-            _context.Products.Remove(product);
-            await _context.SaveChangesAsync();
-
+            await _productRepo.DeleteAsync(product);
             return RedirectToAction("Index");
         }
     }

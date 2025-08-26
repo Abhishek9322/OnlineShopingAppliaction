@@ -3,23 +3,23 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
+using OnlineShopingAppliaction.Repository.Interface;
 
 namespace OnlineShopingAppliaction.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class CategoryController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICategoryRepository _categoryRepo;
 
-        public CategoryController(ApplicationDbContext context)
+        public CategoryController(ICategoryRepository categoryRepo)
         {
-            _context = context;
+            _categoryRepo = categoryRepo;
         }
-
         //List category
         public async Task<IActionResult> Index()
         {
-            var categories = await _context.Categories.ToListAsync();
+            var categories = await _categoryRepo.GetAllAsync();
             return View(categories);
         }
 
@@ -31,17 +31,10 @@ namespace OnlineShopingAppliaction.Controllers
         {
             if (ModelState.IsValid)
             {
-                await _context.Categories.AddAsync(category);
-                await _context.SaveChangesAsync();
+                await _categoryRepo.AddAsync(category);
+                await _categoryRepo.SaveAsync();
                 return RedirectToAction(nameof(Index));
             }
-
-            // Debugging errors
-            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
-            {
-                Console.WriteLine(error.ErrorMessage);
-            }
-
             return View(category);
         }
 
@@ -49,7 +42,7 @@ namespace OnlineShopingAppliaction.Controllers
         //Edit Category
         public async Task<IActionResult> Edit(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _categoryRepo.GetByIdAsync(id);
             if (category == null) return NotFound();
             return View(category);
         }
@@ -59,8 +52,8 @@ namespace OnlineShopingAppliaction.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Categories.Update(category);
-                await _context.SaveChangesAsync();
+                await _categoryRepo.UpdateAsync(category);
+                await _categoryRepo.SaveAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(category);
@@ -68,11 +61,11 @@ namespace OnlineShopingAppliaction.Controllers
         // Delete Category
         public async Task<IActionResult> Delete(int id)
         {
-            var category = await _context.Categories.FindAsync(id);
+            var category = await _categoryRepo.GetByIdAsync(id);
             if (category != null)
             {
-                _context.Categories.Remove(category);
-                await _context.SaveChangesAsync();
+                await _categoryRepo.DeleteAsync(category);
+                await _categoryRepo.SaveAsync();
             }
             return RedirectToAction(nameof(Index));
         }

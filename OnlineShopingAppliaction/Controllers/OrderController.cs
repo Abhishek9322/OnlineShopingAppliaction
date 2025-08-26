@@ -491,6 +491,8 @@ namespace OnlineShopingAppliaction.Controllers
             ViewBag.DeliveryBoy = deliveryBoys;
             return View(order);
         }
+
+
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> AssignOrderToDeliveryBoy(int orderId, int deliveryBoyId)

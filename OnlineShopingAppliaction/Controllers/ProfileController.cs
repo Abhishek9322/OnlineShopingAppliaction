@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
+using OnlineShopingAppliaction.Repository.Interface;
 using System.Security.Claims;
 
 namespace OnlineShopingAppliaction.Controllers
@@ -10,15 +11,15 @@ namespace OnlineShopingAppliaction.Controllers
     [Authorize]
     public class ProfileController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProfileRepository _profileRepo;
 
-        public ProfileController(ApplicationDbContext context)
+        public ProfileController(IProfileRepository profileRepo)
         {
-            _context = context;
+            _profileRepo = profileRepo;
         }
 
 
-        
+
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -35,7 +36,7 @@ namespace OnlineShopingAppliaction.Controllers
         public async Task<IActionResult> Edit()
         {
             int userId = GetCurrentUserId();
-            var user =await _context.AppUsers.FirstOrDefaultAsync(u => u.Id == userId);
+            var user = await _profileRepo.GetUserByIdAsync(userId);
             if (user == null) return NotFound();
 
             var vm = new ProfileUpdateViewModel
@@ -54,39 +55,32 @@ namespace OnlineShopingAppliaction.Controllers
         {  // Debug ModelState Errors
             if (!ModelState.IsValid)
             {
-                var errors = ModelState.Values
-                                        .SelectMany(v => v.Errors)
-                                        .Select(e => e.ErrorMessage)
-                                        .ToList();
-
-                TempData["Error"] = "Validation Failed: " + string.Join(", ", errors);
+                TempData["Error"] = "Validation Failed";
                 return View(model);
             }
 
-            int userId = GetCurrentUserId();  // Get from JWT
-            var user =await _context.AppUsers.FirstOrDefaultAsync(o => o.Id == userId);
+            int userId = GetCurrentUserId();
+            var user = await _profileRepo.GetUserByIdAsync(userId);
             if (user == null)
             {
                 TempData["Error"] = "User not found!";
                 return View(model);
             }
 
-            // Update fields
             user.UserName = model.UserName;
             user.Email = model.Email;
 
-            // Update password only if provided
             if (!string.IsNullOrWhiteSpace(model.NewPassword))
             {
                 user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(model.NewPassword);
             }
 
-            _context.AppUsers.Update(user);
-           await  _context.SaveChangesAsync();
+            await _profileRepo.UpdateUserAsync(user);
+            await _profileRepo.SaveAsync();
 
             TempData["Success"] = "Profile updated successfully!";
             return RedirectToAction("Edit");
         }
-       
+
     }
 }

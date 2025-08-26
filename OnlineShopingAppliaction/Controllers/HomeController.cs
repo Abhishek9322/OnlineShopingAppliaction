@@ -3,26 +3,24 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
+using OnlineShopingAppliaction.Repository.Interface;
 
 namespace OnlineShopingAppliaction.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly ApplicationDbContext _context;
+        private readonly IHomeRepository _homeRepo;
 
-        public HomeController(ILogger<HomeController> logger ,ApplicationDbContext context)
+        public HomeController(ILogger<HomeController> logger, IHomeRepository homeRepo)
         {
             _logger = logger;
-            _context = context;
+            _homeRepo = homeRepo;
         }
-  
+
         public async Task<IActionResult> Index()
         {
-            var categoriesWithProducts =await _context.Categories
-                 .Include(c => c.Products)
-                 .ToListAsync();
-
+            var categoriesWithProducts = await _homeRepo.GetCategoriesWithProductsAsync();
             return View(categoriesWithProducts);
         }
 

@@ -4,20 +4,31 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
+using OnlineShopingAppliaction.Repository.Interface;
+using OnlineShopingAppliaction.Repository.Repository;
 using System.Security.Claims;
 
 namespace OnlineShopingAppliaction.Controllers
 {
-    
+
     public class CartController : Controller
     {
 
-        private readonly ApplicationDbContext _context;
+        private readonly ICartRepository _cartRepo;
+        private readonly IProductRepository _productRepo;
+        private readonly IOrderRepository _orderRepo;
+
+
         private const decimal DISCOUNT_THRESHOLD = 5000;
         private const decimal DISCOUNT_PERCENT = 10;
-        public CartController(ApplicationDbContext context) { _context = context; }
+        public CartController(ICartRepository cartRepo, IProductRepository productRepo, IOrderRepository orderRepo)
+        {
+            _cartRepo = cartRepo;
+            _productRepo = productRepo;
+            _orderRepo = orderRepo;
+        }
 
-        
+
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -30,26 +41,18 @@ namespace OnlineShopingAppliaction.Controllers
         //Quentity addign
         public async Task<IActionResult> IncreaseQuantity(int id)
         {
-            var jwt = Request.Cookies["jwt"];
-            if (string.IsNullOrWhiteSpace(jwt))
-            {
-                TempData["ErrorMessage"] = "Please log in to update cart quantity.";
-                return RedirectToAction("Login", "Account");
-            }
-
-            var cartItem = await _context.CartItems.FirstOrDefaultAsync(x => x.Id == id);
+            var cartItem = await _cartRepo.GetCartItemByIdAsync(id);
             if (cartItem != null)
             {
-
-                var product= await _context.Products.FirstOrDefaultAsync(x => x.Id==cartItem.ProductId);
-                if (product != null &&cartItem.Quantity +1<=product.Stock) 
+                var product = await _productRepo.GetByIdAsync(cartItem.ProductId);
+                if (product != null && cartItem.Quantity + 1 <= product.Stock)
                 {
-                    cartItem.Quantity += 1;
-                    await _context.SaveChangesAsync();
+                    cartItem.Quantity++;
+                    await _cartRepo.SaveAsync();
                 }
                 else
                 {
-                    TempData["ErrorMEssage"] = "Cannot increase quantity .Not enough stock.";
+                    TempData["ErrorMessage"] = "Cannot increase quantity. Not enough stock.";
                 }
             }
 
@@ -60,25 +63,18 @@ namespace OnlineShopingAppliaction.Controllers
         //Decrease Quantity
         public async Task<IActionResult> DecreaseQuantity(int id)
         {
-            var jwt = Request.Cookies["jwt"];
-            if (string.IsNullOrEmpty(jwt))
-            {
-                TempData["ErrorMessage"] = "Please log in to update quantity.";
-                return RedirectToAction("Login", "Account");
-            }
-
-            var cartItem = await _context.CartItems.FirstOrDefaultAsync(x => x.Id == id);
+            var cartItem = await _cartRepo.GetCartItemByIdAsync(id);
             if (cartItem != null)
             {
                 if (cartItem.Quantity > 1)
                 {
-                    cartItem.Quantity -= 1;
-                    await _context.SaveChangesAsync();
+                    cartItem.Quantity--;
+                    await _cartRepo.SaveAsync();
                 }
                 else
                 {
-                    _context.CartItems.Remove(cartItem);
-                    await _context.SaveChangesAsync();
+                    await _cartRepo.RemoveCartItemAsync(cartItem);
+                    await _cartRepo.SaveAsync();
                 }
             }
             return RedirectToAction("Index");
@@ -95,35 +91,13 @@ namespace OnlineShopingAppliaction.Controllers
             }
 
             int userId = GetCurrentUserId();
-            var cart = await _context.CartItems
-                                     .Include(c => c.Product)
-                                     .Where(c => c.UserId == userId)
-                                     .ToListAsync();
+            var cart = await _cartRepo.GetUserCartAsync(userId);
 
-            // Calculate totals
-            decimal total = 0;
-            decimal totalDiscount = 0;
-            decimal finalTotal = 0;
-
-            foreach (var item in cart)
-            {
-                decimal productTotal = item.Product.Price * item.Quantity;
-                decimal productDiscount = productTotal > DISCOUNT_THRESHOLD
-                    ? productTotal * (DISCOUNT_PERCENT / 100)
-                    : 0;
-
-                total += productTotal;
-                totalDiscount += productDiscount;
-                finalTotal += productTotal - productDiscount;
-
-                // Store discount & final total per product in ViewBag
-                ViewData[$"Discount_{item.Id}"] = productDiscount;
-                ViewData[$"Final_{item.Id}"] = productTotal - productDiscount;
-            }
+            ComputeTotals(cart, out var total, out var discount, out var final);
 
             ViewBag.Total = total;
-            ViewBag.Discount = totalDiscount;
-            ViewBag.FinalTotal = finalTotal;
+            ViewBag.Discount = discount;
+            ViewBag.FinalTotal = final;
 
             return View(cart);
         }
@@ -136,30 +110,28 @@ namespace OnlineShopingAppliaction.Controllers
             if (quantity < 1) quantity = 1;
 
             int userId = GetCurrentUserId();
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            var product = await _productRepo.GetByIdAsync(productId);
             if (product == null) return NotFound();
 
             if (product.Stock < quantity)
             {
-                TempData["ErrorMessage"] = $"Only {product.Stock} item(s) available for '{product.Name}'.";
+                TempData["ErrorMessage"] = $"Only {product.Stock} left for {product.Name}.";
                 return RedirectToAction("Details", "Product", new { id = productId });
             }
 
-            var existing = await _context.CartItems
-                .FirstOrDefaultAsync(c => c.ProductId == productId && c.UserId == userId);
-
+            var existing = await _cartRepo.GetUserCartItemAsync(userId, productId);
             if (existing != null)
             {
                 if (existing.Quantity + quantity > product.Stock)
                 {
-                    TempData["ErrorMessage"] = $"Cannot add {quantity} more. Only {product.Stock - existing.Quantity} item(s) left.";
+                    TempData["ErrorMessage"] = $"Not enough stock.";
                     return RedirectToAction("Index");
                 }
                 existing.Quantity += quantity;
             }
             else
             {
-                await _context.CartItems.AddAsync(new CartItem
+                await _cartRepo.AddCartItemAsync(new CartItem
                 {
                     ProductId = productId,
                     ProductName = product.Name,
@@ -168,7 +140,7 @@ namespace OnlineShopingAppliaction.Controllers
                 });
             }
 
-            await _context.SaveChangesAsync();
+            await _cartRepo.SaveAsync();
             return RedirectToAction("Index");
         }
 
@@ -176,11 +148,11 @@ namespace OnlineShopingAppliaction.Controllers
         public async Task<IActionResult> RemoveFromCart(int id)
         {
             int userId = GetCurrentUserId();
-            var item = await _context.CartItems.FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
-            if (item != null)
+            var item = await _cartRepo.GetCartItemByIdAsync(id);
+            if (item != null && item.UserId == userId)
             {
-                _context.CartItems.Remove(item);
-                await _context.SaveChangesAsync();
+                await _cartRepo.RemoveCartItemAsync(item);
+                await _cartRepo.SaveAsync();
             }
             return RedirectToAction("Index");
         }
@@ -189,10 +161,7 @@ namespace OnlineShopingAppliaction.Controllers
         {
             int userId = GetCurrentUserId();
 
-            var cart = await _context.CartItems
-                .Include(c => c.Product)
-                .Where(c => c.UserId == userId)
-                .ToListAsync();
+            var cart = await _cartRepo.GetUserCartAsync(userId);
 
             if (!cart.Any())
             {
@@ -214,102 +183,71 @@ namespace OnlineShopingAppliaction.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PlaceSingleOrder(int productId, int quantity)
         {
-            if (!User.Identity.IsAuthenticated)
-            {
-                TempData["ErrorMessage"] = "Please login to place order.";
-                return RedirectToAction("Login", "Account");
-            }
-
-            if (quantity < 1) quantity = 1;
 
             int userId = GetCurrentUserId();
-            var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productId);
+            var product = await _productRepo.GetByIdAsync(productId);
             if (product == null) return NotFound();
 
             if (product.Stock < quantity)
             {
-                TempData["ErrorMessage"] = $"Not enough stock for {product.Name}. Available: {product.Stock}.";
+                TempData["ErrorMessage"] = "Not enough stock.";
                 return RedirectToAction("Details", new { id = productId });
             }
 
-            await using var tx = await _context.Database.BeginTransactionAsync();
-            try
+            var lineTotal = product.Price * quantity;
+            var lineDiscount = lineTotal > DISCOUNT_THRESHOLD ? lineTotal * (DISCOUNT_PERCENT / 100m) : 0m;
+            var finalTotal = lineTotal - lineDiscount;
+
+            var order = new Order
             {
-                var lineTotal = product.Price * quantity;
-                var lineDiscount = lineTotal > DISCOUNT_THRESHOLD ? lineTotal * (DISCOUNT_PERCENT / 100m) : 0m;
-                var finalTotal = lineTotal - lineDiscount;
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                Subtotal = lineTotal,
+                Discount = lineDiscount,
+                Total = finalTotal,
+                Status = "Placed"
+            };
 
+            await _orderRepo.AddOrderAsync(order);
+            await _orderRepo.SaveChangesAsync();
 
-                //create a new order
-                var order = new Order
-                {
-                    UserId = userId,
-                    CreatedAt = DateTime.UtcNow,
-                    Subtotal = lineTotal,
-                    Discount = lineDiscount,
-                    Total = finalTotal,
-                    Status = "Placed"
-                };
-
-                _context.Orders.Add(order);
-                await _context.SaveChangesAsync();
-
-
-                //Create new oredritem row linked to that (order)
-                var item = new OrderItem
-                {
-                    OrderId = order.Id,
-                    ProductId = productId,
-                    ProductName = product.Name,
-                    UnitPrice = product.Price,
-                    Quantity = quantity,
-                    LineDiscount = lineDiscount,
-                    LineTotal = finalTotal
-                };
-                _context.OrderItems.Add(item);
-
-
-                //Reduce product stock
-                product.Stock -= quantity;
-                _context.Products.Update(product);
-
-                await _context.SaveChangesAsync();
-                await tx.CommitAsync();
-
-                TempData["SuccessMessage"] = $"Order placed for {product.Name} ({quantity}).";
-                return RedirectToAction("Details", "Order", new { id = order.Id });
-            }
-            catch (Exception ex)
+            var item = new OrderItem
             {
-                await tx.RollbackAsync();
-                TempData["ErrorMessage"] = $"Failed to place order: {ex.Message}";
-                return RedirectToAction("Details", new { id = productId });
-            }
+                OrderId = order.Id,
+                ProductId = productId,
+                ProductName = product.Name,
+                UnitPrice = product.Price,
+                Quantity = quantity,
+                LineDiscount = lineDiscount,
+                LineTotal = finalTotal
+            };
+
+            await _orderRepo.AddOrderItemsAsync(new List<OrderItem> { item });
+            await _orderRepo.SaveChangesAsync();
+
+            product.Stock -= quantity;
+            await _productRepo.UpdateAsync(product);
+
+            TempData["SuccessMessage"] = $"Order placed for {product.Name} ({quantity}).";
+            return RedirectToAction("Details", "Order", new { id = order.Id });
         }
 
 
         // helper
-        private static void ComputeTotals(
-            List<CartItem> cart,
-            out decimal total,
-            out decimal totalDiscount,
-            out decimal finalTotal)
+        private static void ComputeTotals(List<CartItem> cart, out decimal total, out decimal discount, out decimal final)
         {
-            total = 0m;
-            totalDiscount = 0m;
-            finalTotal = 0m;
-
+            total = discount = final = 0;
             foreach (var item in cart)
             {
                 var productTotal = item.Product.Price * item.Quantity;
                 var productDiscount = productTotal > DISCOUNT_THRESHOLD ? productTotal * (DISCOUNT_PERCENT / 100m) : 0m;
 
                 total += productTotal;
-                totalDiscount += productDiscount;
-                finalTotal += productTotal - productDiscount;
+                discount += productDiscount;
+                final += productTotal - productDiscount;
             }
+
+
         }
-
-
     }
 }
