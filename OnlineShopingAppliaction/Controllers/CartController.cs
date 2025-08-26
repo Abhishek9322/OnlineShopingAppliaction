@@ -1,23 +1,34 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.JSInterop;
 using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
+using OnlineShopingAppliaction.Repository.Interface;
+using OnlineShopingAppliaction.Repository.Repository;
 using System.Security.Claims;
 
 namespace OnlineShopingAppliaction.Controllers
 {
-    
+
     public class CartController : Controller
     {
 
-        private readonly ApplicationDbContext _context;
+        private readonly ICartRepository _cartRepo;
+        private readonly IProductRepository _productRepo;
+        private readonly IOrderRepository _orderRepo;
+
+
         private const decimal DISCOUNT_THRESHOLD = 5000;
         private const decimal DISCOUNT_PERCENT = 10;
+        public CartController(ICartRepository cartRepo, IProductRepository productRepo, IOrderRepository orderRepo)
+        {
+            _cartRepo = cartRepo;
+            _productRepo = productRepo;
+            _orderRepo = orderRepo;
+        }
 
-        public CartController(ApplicationDbContext context) { _context = context; }
 
-        
         private int GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -28,57 +39,50 @@ namespace OnlineShopingAppliaction.Controllers
 
 
         //Quentity addign
-        public IActionResult IncreaseQuantity(int id)
+        public async Task<IActionResult> IncreaseQuantity(int id)
         {
-            var jwt = Request.Cookies["jwt"];
-            if(string.IsNullOrWhiteSpace(jwt))
+            var cartItem = await _cartRepo.GetCartItemByIdAsync(id);
+            if (cartItem != null)
             {
-                TempData["ErrorMessage"] = "Please log in to update cart Quantity. ";
-                return RedirectToAction("Login", "Account");
-            }
-
-
-            var cartItem=_context.CartItems.FirstOrDefault(x => x.Id == id);
-            if(cartItem != null)
-            {
-                 cartItem.Quantity += 1;
-                    _context.SaveChanges();
-            }
-
-            return RedirectToAction("Index");
-        }
-
-        //Decrease Quantity
-        public IActionResult DecreaseQuantity(int id)
-        {
-            var jwt = Request.Cookies["jwt"];
-            if (string.IsNullOrEmpty(jwt))
-            {
-                TempData["ErrorMessage"] = "Plase loh in to update Quentity .";
-                return RedirectToAction("Login", "Account");
-            }
-
-            var caretItem = _context.CartItems.FirstOrDefault(x => x.Id == id);
-            if (caretItem != null)
-            {
-                if (caretItem.Quantity > 1)
+                var product = await _productRepo.GetByIdAsync(cartItem.ProductId);
+                if (product != null && cartItem.Quantity + 1 <= product.Stock)
                 {
-                    caretItem.Quantity -= 1;
-                    _context.SaveChanges();
+                    cartItem.Quantity++;
+                    await _cartRepo.SaveAsync();
                 }
                 else
                 {
-                    _context.CartItems.Remove(caretItem);
-                    _context.SaveChanges();
+                    TempData["ErrorMessage"] = "Cannot increase quantity. Not enough stock.";
+                }
+            }
+
+            return RedirectToAction("Index");
+        }
+
+
+        //Decrease Quantity
+        public async Task<IActionResult> DecreaseQuantity(int id)
+        {
+            var cartItem = await _cartRepo.GetCartItemByIdAsync(id);
+            if (cartItem != null)
+            {
+                if (cartItem.Quantity > 1)
+                {
+                    cartItem.Quantity--;
+                    await _cartRepo.SaveAsync();
+                }
+                else
+                {
+                    await _cartRepo.RemoveCartItemAsync(cartItem);
+                    await _cartRepo.SaveAsync();
                 }
             }
             return RedirectToAction("Index");
         }
 
 
-
         //cart 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             if (!User.Identity.IsAuthenticated)
             {
@@ -86,30 +90,86 @@ namespace OnlineShopingAppliaction.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
+            int userId = GetCurrentUserId();
+            var cart = await _cartRepo.GetUserCartAsync(userId);
+
+            ComputeTotals(cart, out var total, out var discount, out var final);
+
+            ViewBag.Total = total;
+            ViewBag.Discount = discount;
+            ViewBag.FinalTotal = final;
+
+            return View(cart);
+        }
+
+        public async Task<IActionResult> AddToCart(int productId, int quantity)
+        {
+            if (!User.Identity.IsAuthenticated)
+                return RedirectToAction("Login", "Account");
+
+            if (quantity < 1) quantity = 1;
 
             int userId = GetCurrentUserId();
-            var cart = _context.CartItems.Include(c => c.Product)
-                                         .Where(c => c.UserId == userId)
-                                         .ToList();
+            var product = await _productRepo.GetByIdAsync(productId);
+            if (product == null) return NotFound();
 
-            // Calculate totals
-            decimal total = 0;
-            decimal totalDiscount = 0;
-            decimal finalTotal = 0;
-
-            foreach (var item in cart)
+            if (product.Stock < quantity)
             {
-                decimal productTotal = item.Product.Price * item.Quantity;
-                decimal productDiscount = productTotal > DISCOUNT_THRESHOLD ? productTotal * (DISCOUNT_PERCENT / 100) : 0;
-
-                total += productTotal;
-                totalDiscount += productDiscount;
-                finalTotal += (productTotal - productDiscount);
-
-                //  Store discount & final total per product in ViewBag dynamically
-                ViewData[$"Discount_{item.Id}"] = productDiscount;
-                ViewData[$"Final_{item.Id}"] = productTotal - productDiscount;
+                TempData["ErrorMessage"] = $"Only {product.Stock} left for {product.Name}.";
+                return RedirectToAction("Details", "Product", new { id = productId });
             }
+
+            var existing = await _cartRepo.GetUserCartItemAsync(userId, productId);
+            if (existing != null)
+            {
+                if (existing.Quantity + quantity > product.Stock)
+                {
+                    TempData["ErrorMessage"] = $"Not enough stock.";
+                    return RedirectToAction("Index");
+                }
+                existing.Quantity += quantity;
+            }
+            else
+            {
+                await _cartRepo.AddCartItemAsync(new CartItem
+                {
+                    ProductId = productId,
+                    ProductName = product.Name,
+                    Quantity = quantity,
+                    UserId = userId
+                });
+            }
+
+            await _cartRepo.SaveAsync();
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]  // allow GET request
+        public async Task<IActionResult> RemoveFromCart(int id)
+        {
+            int userId = GetCurrentUserId();
+            var item = await _cartRepo.GetCartItemByIdAsync(id);
+            if (item != null && item.UserId == userId)
+            {
+                await _cartRepo.RemoveCartItemAsync(item);
+                await _cartRepo.SaveAsync();
+            }
+            return RedirectToAction("Index");
+        }
+
+        public async Task<IActionResult> Summary()
+        {
+            int userId = GetCurrentUserId();
+
+            var cart = await _cartRepo.GetUserCartAsync(userId);
+
+            if (!cart.Any())
+            {
+                TempData["ErrorMessage"] = "Your cart is empty.";
+                return RedirectToAction("Index");
+            }
+
+            ComputeTotals(cart, out var total, out var totalDiscount, out var finalTotal);
 
             ViewBag.Total = total;
             ViewBag.Discount = totalDiscount;
@@ -118,58 +178,76 @@ namespace OnlineShopingAppliaction.Controllers
             return View(cart);
         }
 
-        public IActionResult AddToCart(int productId)
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PlaceSingleOrder(int productId, int quantity)
         {
 
-            if (!User.Identity.IsAuthenticated)
-                return RedirectToAction("Login", "Account");
-
             int userId = GetCurrentUserId();
-
-            var product = _context.Products.FirstOrDefault(p => p.Id == productId);
+            var product = await _productRepo.GetByIdAsync(productId);
             if (product == null) return NotFound();
 
-            var existing = _context.CartItems.FirstOrDefault(c => c.ProductId == productId && c.UserId == userId);
-            if (existing != null)
+            if (product.Stock < quantity)
             {
-                existing.Quantity++;
-            }
-            else
-            {
-                _context.CartItems.Add(new CartItem
-                {
-                    ProductId = productId,
-                    ProductName = product.Name, 
-                    Quantity = 1,
-                    UserId = userId
-                });
+                TempData["ErrorMessage"] = "Not enough stock.";
+                return RedirectToAction("Details", new { id = productId });
             }
 
-            _context.SaveChanges();
-            return RedirectToAction("Index");
+            var lineTotal = product.Price * quantity;
+            var lineDiscount = lineTotal > DISCOUNT_THRESHOLD ? lineTotal * (DISCOUNT_PERCENT / 100m) : 0m;
+            var finalTotal = lineTotal - lineDiscount;
+
+            var order = new Order
+            {
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                Subtotal = lineTotal,
+                Discount = lineDiscount,
+                Total = finalTotal,
+                Status = "Placed"
+            };
+
+            await _orderRepo.AddOrderAsync(order);
+            await _orderRepo.SaveChangesAsync();
+
+            var item = new OrderItem
+            {
+                OrderId = order.Id,
+                ProductId = productId,
+                ProductName = product.Name,
+                UnitPrice = product.Price,
+                Quantity = quantity,
+                LineDiscount = lineDiscount,
+                LineTotal = finalTotal
+            };
+
+            await _orderRepo.AddOrderItemsAsync(new List<OrderItem> { item });
+            await _orderRepo.SaveChangesAsync();
+
+            product.Stock -= quantity;
+            await _productRepo.UpdateAsync(product);
+
+            TempData["SuccessMessage"] = $"Order placed for {product.Name} ({quantity}).";
+            return RedirectToAction("Details", "Order", new { id = order.Id });
         }
 
 
-        public IActionResult RemoveFromCart(int id)
+        // helper
+        private static void ComputeTotals(List<CartItem> cart, out decimal total, out decimal discount, out decimal final)
         {
-            int userId = GetCurrentUserId();
-            var item = _context.CartItems.FirstOrDefault(c => c.Id == id && c.UserId == userId);
-            if (item != null)
+            total = discount = final = 0;
+            foreach (var item in cart)
             {
-                _context.CartItems.Remove(item);
-                _context.SaveChanges();
+                var productTotal = item.Product.Price * item.Quantity;
+                var productDiscount = productTotal > DISCOUNT_THRESHOLD ? productTotal * (DISCOUNT_PERCENT / 100m) : 0m;
+
+                total += productTotal;
+                discount += productDiscount;
+                final += productTotal - productDiscount;
             }
-            return RedirectToAction("Index");
-        }
 
-        public IActionResult Summary()
-        {
-            int userId = GetCurrentUserId();
-            var cart = _context.CartItems.Include(c => c.Product)
-                                         .Where(c => c.UserId == userId) //  Filter user items
-                                         .ToList();
 
-            return View(cart);
         }
     }
 }

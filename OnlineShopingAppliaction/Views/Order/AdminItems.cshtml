@@ -1,0 +1,94 @@
+﻿@model IEnumerable<OnlineShopingAppliaction.Models.OrderItem>
+
+@{
+    ViewData["Title"] = "Received Orders";
+}
+
+<div class="container mt-4">
+    <h2 class="fw-bold mb-4 text-dark">Received Orders</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info shadow-sm rounded">
+            No orders received yet.
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow-sm border-0 rounded-4 h-100">
+                        <div class="card-body p-3 d-flex flex-column">
+
+                            <!-- Product Image & Name -->
+                            <div class="d-flex align-items-center mb-3">
+                                <a href="/Product/Details/@item.Product.Id">
+                                    <img src="@item.Product.ImagePath"
+                                         class="rounded me-3"
+                                         style="width:70px; height:70px; object-fit:cover; cursor:pointer;" />
+                                </a>
+                                <div>
+                                    <h5 class="mb-1">@item.Product.Name</h5>
+                                    <span class="text-muted small">Order ID: @item.Order.Id</span>
+                                </div>
+                            </div>
+
+                            <!-- Quantity -->
+                            <p class="mb-2"><strong>Quantity:</strong> @item.Quantity</p>
+
+                            <!-- Customer Info -->
+                            <div class="mb-2">
+                                <strong>@item.Order.User?.UserName</strong><br />
+                                <small class="text-muted">@item.Order.User?.Email</small>
+                            </div>
+
+                            <!-- Address -->
+                            <div class="mb-2">
+                                <i class="bi bi-geo-alt-fill text-danger"></i>
+                                @item.Order.ShippingAddressLine2 <br />
+                                <span class="text-muted small">Pincode: @item.Order.ShippingPincode</span>
+                            </div>
+
+                            <!-- Status & Update + Assign Buttons -->
+                            <div class="d-flex justify-content-start align-items-center mt-auto gap-2">
+
+                                <!-- Update Status -->
+                                <form asp-action="UpdateOrderStatus" method="post" class="d-flex align-items-center gap-2">
+                                    <input type="hidden" name="orderId" value="@item.Order.Id" />
+
+                                    <select name="status" class="form-select form-select-sm" style="background-color:#F8FAFC; border-radius:0.5rem;">
+                                        <option value="Placed" selected="@(item.Order.Status == "Placed")">Placed</option>
+                                        <option value="Shipped" selected="@(item.Order.Status == "Shipped")">Shipped</option>
+                                        <option value="Delivered" selected="@(item.Order.Status == "Delivered")">Delivered</option>
+                                        <option value="Cancelled" selected="@(item.Order.Status == "Cancelled")">Cancelled</option>
+                                    </select>
+
+                                    <button type="submit" class="btn btn-sm px-3" style="background-color:#F8FAFC; color:#000; border:1px solid #ccc; border-radius:0.5rem;">
+                                        Update
+                                    </button>
+                                </form>
+
+                                <!-- Assign Order Button -->
+                                @if (item.Order.Status != "Delivered")
+                                {
+                                    <a asp-controller="Order"
+                                       asp-action="AssignOrderToDeliveryBoy"
+                                       asp-route-orderId="@item.Order.Id"
+                                       class="btn btn-sm px-3"
+                                       style="background-color:#91C8E4; color:#000; border:none; border-radius:0.5rem;">
+                                        Assign
+                                    </a>
+                                }
+
+                            </div>
+
+                            <small class="text-muted mt-2">@item.Order.CreatedAt.ToString("dd MMM yyyy")</small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

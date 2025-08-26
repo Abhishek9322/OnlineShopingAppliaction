@@ -11,7 +11,7 @@ namespace OnlineShopingAppliaction.Models
         public decimal Discount { get; set; } // discount in %
 
         public string? ImagePath { get; set; }
-  
+
 
         //  Foreign Key
         [Required(ErrorMessage = "Please select a category")]
@@ -19,6 +19,15 @@ namespace OnlineShopingAppliaction.Models
 
         //Navigation Property
         public Category Category { get; set; }
+
+        [Range(0, int.MaxValue, ErrorMessage = "Stock must be >=0")]
+        public int Stock { get; set; }
+
+        [Required]
+        public int OwnerId { get; set; }
+        public AppUser? Owner { get; set; }
+
+      //  public bool IsDeleted { get; set; } = false;
 
     }
 }

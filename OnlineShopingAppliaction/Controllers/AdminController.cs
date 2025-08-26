@@ -1,17 +1,19 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OnlineShopingAppliaction.Data;
+using OnlineShopingAppliaction.Repository.Interface;
 
 namespace OnlineShopingAppliaction.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAdminRepository _adminRepository;
 
-        public AdminController(ApplicationDbContext context)
+        public AdminController(IAdminRepository adminRepository)
         {
-            _context = context;
+            _adminRepository = adminRepository;
         }
 
 
@@ -21,33 +23,29 @@ namespace OnlineShopingAppliaction.Controllers
             return View();
         }
 
-        public IActionResult Users()
+        public async Task<IActionResult> Users()
         {
             ViewBag.CurrentAdmin = User.Identity?.Name;
-            var users = _context.AppUsers.ToList();
+            var users = await _adminRepository.GetAllUsersAsync();
             return View(users);
         }
-
         [HttpPost]
-        public IActionResult DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = _context.AppUsers.Find(id);
+            var user = await _adminRepository.GetByIdAsync(id);
             if (user == null) return NotFound();
 
-            if (user.UserName == User.Identity?.Name)        
+            if (user.UserName == User.Identity?.Name)
             {
                 TempData["Error"] = "Admin cannot delete himself";
                 return RedirectToAction("Users");
             }
 
-            _context.AppUsers.Remove(user);
-            _context.SaveChanges();
+            await _adminRepository.DeleteUserAsync(user);
 
-
-            TempData["Success"] = $" User {user.UserName} has been deleted successfully.";
+            TempData["Success"] = $"User {user.UserName} has been deleted successfully.";
             return RedirectToAction("Users");
         }
-
 
 
     }

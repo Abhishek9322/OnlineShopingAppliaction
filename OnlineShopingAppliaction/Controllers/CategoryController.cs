@@ -1,24 +1,25 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
+using OnlineShopingAppliaction.Repository.Interface;
 
 namespace OnlineShopingAppliaction.Controllers
 {
     [Authorize(Roles = "Admin")]
     public class CategoryController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICategoryRepository _categoryRepo;
 
-        public CategoryController(ApplicationDbContext context)
+        public CategoryController(ICategoryRepository categoryRepo)
         {
-            _context = context;
+            _categoryRepo = categoryRepo;
         }
-      
         //List category
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var categories = _context.Categories.ToList();
+            var categories = await _categoryRepo.GetAllAsync();
             return View(categories);
         }
 
@@ -26,55 +27,48 @@ namespace OnlineShopingAppliaction.Controllers
         public IActionResult Create() => View();
 
         [HttpPost]
-        public IActionResult Create(Category category)
+        public async Task<IActionResult> Create(Category category)
         {
             if (ModelState.IsValid)
             {
-                _context.Categories.Add(category);
-                _context.SaveChanges();
-                return RedirectToAction("Index");
+                await _categoryRepo.AddAsync(category);
+                await _categoryRepo.SaveAsync();
+                return RedirectToAction(nameof(Index));
             }
-
-            // Debug what failed
-            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
-            {
-                Console.WriteLine(error.ErrorMessage);
-            }
-
             return View(category);
         }
 
+
         //Edit Category
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var category = _context.Categories.Find(id);
+            var category = await _categoryRepo.GetByIdAsync(id);
             if (category == null) return NotFound();
             return View(category);
         }
 
         [HttpPost]
-        public IActionResult Edit(Category category)
+        public async Task<IActionResult> Edit(Category category)
         {
             if (ModelState.IsValid)
             {
-                _context.Categories.Update(category);
-                _context.SaveChanges();
-                return RedirectToAction("Index");
+                await _categoryRepo.UpdateAsync(category);
+                await _categoryRepo.SaveAsync();
+                return RedirectToAction(nameof(Index));
             }
             return View(category);
         }
         // Delete Category
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var category = _context.Categories.Find(id);
+            var category = await _categoryRepo.GetByIdAsync(id);
             if (category != null)
             {
-                _context.Categories.Remove(category);
-                _context.SaveChanges();
+                await _categoryRepo.DeleteAsync(category);
+                await _categoryRepo.SaveAsync();
             }
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Index));
         }
-
 
 
 

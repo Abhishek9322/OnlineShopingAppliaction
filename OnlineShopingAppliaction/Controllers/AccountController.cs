@@ -1,18 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
+using OnlineShopingAppliaction.Repository.Interface;
 using OnlineShopingAppliaction.Service;
+using System.Timers;
 
 namespace OnlineShopingAppliaction.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAppUserRepository _userRepository;
         private readonly JwtService _jwt;
 
-        public AccountController(ApplicationDbContext context, JwtService jwt)
+        public AccountController(IAppUserRepository userRepository, JwtService jwt)
         {
-            _context = context;
+            _userRepository = userRepository;
             _jwt = jwt;
         }
 
@@ -21,30 +24,39 @@ namespace OnlineShopingAppliaction.Controllers
 
 
         [HttpPost]
-        public IActionResult Register(AppUser user)
+        public async Task<IActionResult> Register(AppUser user)
         {
-            if (_context.AppUsers.Any(u => u.UserName == user.UserName))
+            if (await _userRepository.UsernameExistsAsync(user.UserName))
             {
                 ModelState.AddModelError("", "Username already exists");
                 return View(user);
             }
 
-            if(string.IsNullOrEmpty(user.PasswordHash))
+            if (string.IsNullOrEmpty(user.PasswordHash))
             {
-                ModelState.AddModelError("Passwordhash", "Password is required.");
+                ModelState.AddModelError("PasswordHash", "Password is required.");
+                return View(user);
             }
 
-
+            // Hash password
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(user.PasswordHash);
 
-            if(string.IsNullOrEmpty(user.Role))
-                  user.Role = "User"; // Default role
+            // Default role if not provided
+            if (string.IsNullOrEmpty(user.Role))
+                user.Role = "User";
+            else
+            {
+                var allowedRoles = new[] { "Admin", "User", "DeliveryBoy" };
+                if (!allowedRoles.Contains(user.Role))
+                {
+                    ModelState.AddModelError("Role", "Invalid role selected");
+                    return View(user);
+                }
+            }
 
-            _context.AppUsers.Add(user);
-            _context.SaveChanges();
+            await _userRepository.AddUserAsync(user);
 
             return RedirectToAction("Login");
-
 
         }
 
@@ -53,9 +65,10 @@ namespace OnlineShopingAppliaction.Controllers
 
 
         [HttpPost]
-        public IActionResult Login(string username, string password)
+        public  async Task<IActionResult> Login(string username, string password)
         {
-            var user = _context.AppUsers.FirstOrDefault(u => u.UserName == username);
+            var user = await _userRepository.GetByUsernameAsync(username);
+
             if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
             {
                 ViewBag.Error = "Invalid credentials";
