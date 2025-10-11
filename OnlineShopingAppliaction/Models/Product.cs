@@ -27,7 +27,7 @@ namespace OnlineShopingAppliaction.Models
         public int OwnerId { get; set; }
         public AppUser? Owner { get; set; }
 
-      //  public bool IsDeleted { get; set; } = false;
+        //  public bool IsDeleted { get; set; } = false;
 
     }
 }

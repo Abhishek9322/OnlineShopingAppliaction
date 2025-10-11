@@ -8,8 +8,8 @@
         public int ProductId { get; set; }
         public Product Product { get; set; }
 
-        public string? ProductName {  get; set; }
-       
+        public string? ProductName { get; set; }
+
         //Quentity
         public int Quantity { get; set; }
 
@@ -18,6 +18,6 @@
         public AppUser User { get; set; }
 
         //  Added UserId to track who owns the cart item
-       
+
     }
 }

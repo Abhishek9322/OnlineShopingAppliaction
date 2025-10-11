@@ -175,6 +175,7 @@
                             </li>
                         }
 
+                       
                         @if (HttpContextAccessor.HttpContext.User.IsInRole("DeliveryBoy"))
                         {
                             <li class="nav-item dropdown">
@@ -209,6 +210,9 @@
                                     <i class="bi bi-search"></i>
                                 </button>
                             </form>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Home" asp-action="ChatAi">Helper</a>
                         </li>
 
                         <li class="nav-item">

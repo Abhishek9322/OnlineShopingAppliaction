@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
 using OnlineShopingAppliaction.Repository.Interface;
 using System.Security.Claims;

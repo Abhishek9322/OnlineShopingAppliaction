@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
 using OnlineShopingAppliaction.Repository.Interface;
 using OnlineShopingAppliaction.Service;
-using System.Timers;
 
 namespace OnlineShopingAppliaction.Controllers
 {
@@ -65,7 +63,7 @@ namespace OnlineShopingAppliaction.Controllers
 
 
         [HttpPost]
-        public  async Task<IActionResult> Login(string username, string password)
+        public async Task<IActionResult> Login(string username, string password)
         {
             var user = await _userRepository.GetByUsernameAsync(username);
 

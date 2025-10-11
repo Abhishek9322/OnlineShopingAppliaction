@@ -1,15 +1,8 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
-using System.Reflection.Metadata;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http.HttpResults;
-using System.Globalization;
-using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 using OnlineShopingAppliaction.Repository.Interface;
+using System.Security.Claims;
 
 
 namespace OnlineShopingAppliaction.Controllers
@@ -18,13 +11,13 @@ namespace OnlineShopingAppliaction.Controllers
     {
 
         private readonly IProductRepository _productRepo;
-        private readonly IWebHostEnvironment _webHostEnvironment;    
-        
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
         public ProductController(IProductRepository productRepository, IWebHostEnvironment webHostEnvironment)
         {
             _productRepo = productRepository;
             _webHostEnvironment = webHostEnvironment;
-            
+
         }
 
         //Available Products / Filter category  /search bar by product name or the category name 
@@ -33,7 +26,7 @@ namespace OnlineShopingAppliaction.Controllers
               int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
 
 
-        public async Task<IActionResult> Index(int? categoryId ,string searchQuery)
+        public async Task<IActionResult> Index(int? categoryId, string searchQuery)
         {
             var products = await _productRepo.GetAllAsync(categoryId, searchQuery);
             ViewBag.Categories = await _productRepo.GetCategoriesAsync();
@@ -78,7 +71,7 @@ namespace OnlineShopingAppliaction.Controllers
 
             product.OwnerId = GetCurrentUserId();
 
-            // ✅ Handle image upload
+            //  Handle image upload
             if (ImageFile != null && ImageFile.Length > 0)
             {
                 string uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "uploads");
@@ -104,7 +97,7 @@ namespace OnlineShopingAppliaction.Controllers
         }
 
         // Edit Product (GET)
-      
+
 
         //  Edit product
         [Authorize(Roles = "Admin")]

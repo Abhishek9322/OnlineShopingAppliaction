@@ -5,7 +5,7 @@ using OnlineShopingAppliaction.Repository.Interface;
 
 namespace OnlineShopingAppliaction.Repository.Repository
 {
-    public class HomeRepository:IHomeRepository
+    public class HomeRepository : IHomeRepository
     {
         private readonly ApplicationDbContext _context;
 
