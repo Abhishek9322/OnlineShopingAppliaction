@@ -15,10 +15,10 @@ namespace OnlineShopingAppliaction.Models
         public Product Product { get; set; }
 
         [Required]
-        public string ProductName { get; set; } = string.Empty; 
+        public string ProductName { get; set; } = string.Empty;
 
         [Required]
-        public decimal UnitPrice { get; set; } 
+        public decimal UnitPrice { get; set; }
 
         [Required]
         public int Quantity { get; set; }
@@ -28,6 +28,6 @@ namespace OnlineShopingAppliaction.Models
         public decimal LineTotal { get; set; }
 
 
-     
+
     }
 }

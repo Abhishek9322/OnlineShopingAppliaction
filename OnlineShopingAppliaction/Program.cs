@@ -2,11 +2,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OnlineShopingAppliaction.Data;
-using OnlineShopingAppliaction.Models;
 using OnlineShopingAppliaction.Repository.Interface;
 using OnlineShopingAppliaction.Repository.Repository;
 using OnlineShopingAppliaction.Service;
-using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,17 +17,21 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddLogging(logging => logging.AddConsole());
 
 //builder.Services.AddSession();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
-builder.Services.AddScoped<IAdminRepository , AdminRepository>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IHomeRepository, HomeRepository>();
+
+
+builder.Services.AddSingleton<ApiService>();
 
 
 

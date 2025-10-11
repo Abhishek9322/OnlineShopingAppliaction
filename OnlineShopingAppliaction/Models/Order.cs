@@ -30,7 +30,7 @@ namespace OnlineShopingAppliaction.Models
         [StringLength(50, MinimumLength = 3, ErrorMessage = "Full name must be between 3 and 50 characters")]
         public string ShippingFullName { get; set; }
 
-       
+
         [Required(ErrorMessage = "Phone number is required")]
         [RegularExpression(@"^\d{10}$", ErrorMessage = "Phone number must be exactly 10 digits")]
         public string ShippingPhone { get; set; }
@@ -48,7 +48,7 @@ namespace OnlineShopingAppliaction.Models
         [RegularExpression(@"^[A-Za-z\s]+$", ErrorMessage = "City can only contain letters and spaces")]
         public string ShippingCity { get; set; }
 
-        
+
         [Required(ErrorMessage = "State is required")]
         [RegularExpression(@"^[A-Za-z\s]+$", ErrorMessage = "State can only contain letters and spaces")]
         public string ShippingState { get; set; }
@@ -64,7 +64,7 @@ namespace OnlineShopingAppliaction.Models
 
         public string ShippingNotes { get; set; }
 
- 
+
 
 
     }

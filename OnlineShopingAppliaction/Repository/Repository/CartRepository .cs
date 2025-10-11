@@ -5,7 +5,7 @@ using OnlineShopingAppliaction.Repository.Interface;
 
 namespace OnlineShopingAppliaction.Repository.Repository
 {
-    public class CartRepository: ICartRepository
+    public class CartRepository : ICartRepository
     {
         private readonly ApplicationDbContext _context;
         public CartRepository(ApplicationDbContext context)

@@ -8,7 +8,7 @@ namespace OnlineShopingAppliaction.Repository.Repository
     public class AdminRepository : IAdminRepository
     {
         private readonly ApplicationDbContext _context;
-        public AdminRepository(ApplicationDbContext context) 
+        public AdminRepository(ApplicationDbContext context)
         {
             _context = context;
         }

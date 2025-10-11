@@ -43,7 +43,7 @@ namespace OnlineShopingAppliaction.Controllers
                 return RedirectToAction("Index", "Cart");
             }
 
-            await using var tx = await _context.Database.BeginTransactionAsync();
+            await using var startTransaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 var order = new Order
@@ -77,14 +77,14 @@ namespace OnlineShopingAppliaction.Controllers
 
                 _context.CartItems.RemoveRange(cartItems);
                 await _context.SaveChangesAsync();
-                await tx.CommitAsync();
+                await startTransaction.CommitAsync();
 
                 TempData["Success"] = "Order placed successfully!";
                 return RedirectToAction(nameof(My));
             }
             catch (Exception ex)
             {
-                await tx.RollbackAsync();
+                await startTransaction.RollbackAsync();
                 TempData["Error"] = $"Failed to place order: {ex.Message}";
                 return RedirectToAction("Index", "Cart");
             }

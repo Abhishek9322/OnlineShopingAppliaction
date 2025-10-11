@@ -5,7 +5,7 @@ using OnlineShopingAppliaction.Repository.Interface;
 
 namespace OnlineShopingAppliaction.Repository.Repository
 {
-    public class CategoryRepository:ICategoryRepository
+    public class CategoryRepository : ICategoryRepository
     {
 
         private readonly ApplicationDbContext _context;

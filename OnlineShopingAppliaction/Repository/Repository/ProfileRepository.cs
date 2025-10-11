@@ -5,7 +5,7 @@ using OnlineShopingAppliaction.Repository.Interface;
 
 namespace OnlineShopingAppliaction.Repository.Repository
 {
-    public class ProfileRepository: IProfileRepository
+    public class ProfileRepository : IProfileRepository
     {
         private readonly ApplicationDbContext _context;
 

@@ -1,9 +1,9 @@
-using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OnlineShopingAppliaction.Data;
 using OnlineShopingAppliaction.Models;
 using OnlineShopingAppliaction.Repository.Interface;
+using OnlineShopingAppliaction.Service;
+using System.Diagnostics;
 
 namespace OnlineShopingAppliaction.Controllers
 {
@@ -12,10 +12,12 @@ namespace OnlineShopingAppliaction.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IHomeRepository _homeRepo;
 
-        public HomeController(ILogger<HomeController> logger, IHomeRepository homeRepo)
+        private readonly ApiService _apiService;
+        public HomeController(ILogger<HomeController> logger, IHomeRepository homeRepo,ApiService apiService)
         {
             _logger = logger;
             _homeRepo = homeRepo;
+            _apiService = apiService;
         }
 
         public async Task<IActionResult> Index()
@@ -33,6 +35,49 @@ namespace OnlineShopingAppliaction.Controllers
         {
             return View();
         }
+
+        public IActionResult ChatAi()
+        {
+            return View(SendMessage);
+        }
+        [HttpPost]
+        [Route("Chat/SendMessage")]
+        [IgnoreAntiforgeryToken]
+        [AllowAnonymous]
+        public async Task<IActionResult> SendMessage(string message, string history = "")
+        {
+            _logger.LogInformation("SendMessage called with: {Message}", message);
+
+            if (string.IsNullOrWhiteSpace(message))
+                return Json(new { error = "Message cannot be empty." });
+
+            try
+            {
+                var response = await _apiService.GetChatResponceAsync(message, history);
+
+                if (string.IsNullOrEmpty(response))
+                    return Json(new { error = "No response from AI service." });
+
+                return Json(new { response });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AI chat error: {Message}", message);
+                return Json(new { error = "Chat service error. " + ex.Message });
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

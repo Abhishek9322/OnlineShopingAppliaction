@@ -1,11 +1,6 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.JSInterop;
-using OnlineShopingAppliaction.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using OnlineShopingAppliaction.Models;
 using OnlineShopingAppliaction.Repository.Interface;
-using OnlineShopingAppliaction.Repository.Repository;
 using System.Security.Claims;
 
 namespace OnlineShopingAppliaction.Controllers

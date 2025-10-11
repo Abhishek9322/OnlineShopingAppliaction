@@ -8,9 +8,9 @@ namespace OnlineShopingAppliaction.Repository.Repository
     public class AppUserRepository : IAppUserRepository
     {
         private readonly ApplicationDbContext _context;
-        public AppUserRepository(ApplicationDbContext context) 
+        public AppUserRepository(ApplicationDbContext context)
         {
-           _context = context;
+            _context = context;
         }
         public async Task AddUserAsync(AppUser user)
         {
